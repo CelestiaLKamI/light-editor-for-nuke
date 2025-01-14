@@ -1,12 +1,10 @@
 import nuke
-from production_path import set_prod_path
-from shot_builder import shot_builder
+from light_editor_tool import light_editor
 
 print("Loading menu.py...")
 
 menu = nuke.menu("Nuke")
 my_scripts = menu.addMenu("Mayukh Scripts Test")
 
-shot_builder_tool = my_scripts.addMenu("Shot Builder Tools")
-shot_builder_tool.addCommand("Set Production Path", set_prod_path)
-shot_builder_tool.addCommand("Shot Builder", shot_builder)
+shot_builder_tool = my_scripts.addMenu("Light Editor")
+shot_builder_tool.addCommand("Light Editor", light_editor)

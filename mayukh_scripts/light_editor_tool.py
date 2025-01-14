@@ -171,5 +171,3 @@ def light_editor():
     global window
     window = MainWindow()
     window.show()
-
-light_editor()
