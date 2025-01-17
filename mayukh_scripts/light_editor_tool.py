@@ -1,5 +1,5 @@
 import nuke
-from PySide2.QtWidgets import QWidget, QTableWidget, QPushButton, QDoubleSpinBox, QSlider, QLabel, QLineEdit, QComboBox, QFrame, QHBoxLayout, QVBoxLayout, QGridLayout
+from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QDoubleSpinBox, QSlider, QLabel, QLineEdit, QComboBox, QFrame, QHBoxLayout, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Qt
 
 class MainWindow(QWidget):
@@ -17,7 +17,10 @@ class MainWindow(QWidget):
         horizontal_separator.setFrameShape(QFrame.HLine)
         horizontal_separator.setFrameShadow(QFrame.Sunken)
 
-        lights_list_table = QTableWidget()
+        self.lights_list_table = QTableWidget()
+        self.lights_list_table.setColumnCount(4)
+        self.lights_list_table.setHorizontalHeaderLabels(["Light Type", "Name", "Color", "Intensity"])
+        self.lights_list_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         
         point_light_button = QPushButton("Point")
         spot_light_button = QPushButton("Spot")
@@ -157,7 +160,7 @@ class MainWindow(QWidget):
         hbox1.addWidget(disable_light_button)
 
         vbox1.addLayout(hbox1)
-        vbox1.addWidget(lights_list_table)
+        vbox1.addWidget(self.lights_list_table)
         vbox2.addLayout(gbox1)
         vbox2.addWidget(horizontal_separator)
         vbox2.addLayout(gbox2)
@@ -167,7 +170,34 @@ class MainWindow(QWidget):
 
         self.setLayout(hbox2)
 
+        self.populate_table()
+
+    def populate_table(self):
+        all_nodes = nuke.allNodes()
+        target_classes = ["Light", "Light2", "Light3", "Light4"]
+        light_nodes = []
+        for node in all_nodes:
+            if node.Class() in target_classes:
+                light_nodes.append(node)
+
+        self.lights_list_table.setRowCount(len(light_nodes))
+        
+        for i, each_light in enumerate(light_nodes):
+            if "light_type" in each_light.knobs():
+                if each_light["light_type"]:   
+                    self.lights_list_table.setItem(i, 0, QTableWidgetItem(each_light["light_type"].value()))
+            else:
+                self.lights_list_table.setItem(i, 0, QTableWidgetItem(each_light.Class()))
+            if each_light["name"]:
+                self.lights_list_table.setItem(i, 1, QTableWidgetItem(each_light["name"].getValue()))
+            if each_light["color"]: 
+                self.lights_list_table.setItem(i, 2, QTableWidgetItem(str(each_light["color"].getValue())))
+            if each_light["intensity"]: 
+                self.lights_list_table.setItem(i, 3, QTableWidgetItem(str(each_light["intensity"].getValue())))
+
 def light_editor():
     global window
     window = MainWindow()
     window.show()
+
+light_editor()
