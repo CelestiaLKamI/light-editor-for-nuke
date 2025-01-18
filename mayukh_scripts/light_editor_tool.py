@@ -21,6 +21,7 @@ class MainWindow(QWidget):
         self.lights_list_table.setColumnCount(4)
         self.lights_list_table.setHorizontalHeaderLabels(["Light Type", "Name", "Color", "Intensity"])
         self.lights_list_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.lights_list_table.setSelectionBehavior(QTableWidget.SelectRows)
         
         point_light_button = QPushButton("Point")
         spot_light_button = QPushButton("Spot")
@@ -185,15 +186,28 @@ class MainWindow(QWidget):
         for i, each_light in enumerate(light_nodes):
             if "light_type" in each_light.knobs():
                 if each_light["light_type"]:   
-                    self.lights_list_table.setItem(i, 0, QTableWidgetItem(each_light["light_type"].value()))
+                    light_type_item = QTableWidgetItem(each_light["light_type"].value())
+                    light_type_item.setFlags(light_type_item.flags() & ~Qt.ItemIsEditable)
+                    self.lights_list_table.setItem(i, 0, light_type_item)
             else:
-                self.lights_list_table.setItem(i, 0, QTableWidgetItem(each_light.Class()))
+                light_type_item = QTableWidgetItem(each_light.Class())
+                light_type_item.setFlags(light_type_item.flags() & ~Qt.ItemIsEditable)
+                self.lights_list_table.setItem(i, 0, light_type_item)                
             if each_light["name"]:
-                self.lights_list_table.setItem(i, 1, QTableWidgetItem(each_light["name"].getValue()))
+                name_item = QTableWidgetItem(each_light["name"].getValue())
+                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+                self.lights_list_table.setItem(i, 1, name_item)
             if each_light["color"]: 
-                self.lights_list_table.setItem(i, 2, QTableWidgetItem(str(each_light["color"].getValue())))
+                color_item = QTableWidgetItem(str(each_light["color"].getValue()))
+                color_item.setFlags(color_item.flags() & ~Qt.ItemIsEditable)
+                self.lights_list_table.setItem(i, 2, color_item)
+                
             if each_light["intensity"]: 
-                self.lights_list_table.setItem(i, 3, QTableWidgetItem(str(each_light["intensity"].getValue())))
+                intensity_item = QTableWidgetItem(str(each_light["intensity"].getValue()))                
+                intensity_item.setFlags(intensity_item.flags() & ~Qt.ItemIsEditable)
+                self.lights_list_table.setItem(i, 3, intensity_item)
+
+    # def edit_properties(self):
 
 def light_editor():
     global window
