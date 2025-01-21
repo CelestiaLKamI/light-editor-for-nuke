@@ -19,7 +19,7 @@ class MainWindow(QWidget):
 
         self.lights_list_table = QTableWidget()
         self.lights_list_table.setColumnCount(4)
-        self.lights_list_table.setHorizontalHeaderLabels(["Light Type", "Name", "Color", "Intensity"])
+        self.lights_list_table.setHorizontalHeaderLabels(["Light Type/Class", "Name", "Color", "Intensity"])
         self.lights_list_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.lights_list_table.setSelectionBehavior(QTableWidget.SelectRows)
         
@@ -92,8 +92,12 @@ class MainWindow(QWidget):
         gbox2.addWidget(z_scale_label, 2, 5)
         gbox2.addWidget(uniform_scale_label, 3, 0)
 
-        light_name_input = QLineEdit()
-        light_type_input = QComboBox()
+        self.light_name_input = QLineEdit()
+        self.light_name_input.setPlaceholderText("Enter Light Name")
+        self.light_name_input.textChanged.connect(self.edit_name)
+        self.light_type_input = QComboBox()
+        self.light_type_input.addItems(["Point", "Spot", "Directional"])
+        self.light_type_input.currentIndexChanged.connect(self.edit_properties)
         color_input = QPushButton("Color")
         r_input = QDoubleSpinBox()
         r_slider_input = QSlider(Qt.Horizontal)
@@ -111,8 +115,8 @@ class MainWindow(QWidget):
         cone_falloff_slider_input = QSlider(Qt.Horizontal)
         falloff_type_input = QComboBox()
 
-        gbox1.addWidget(light_name_input, 0, 1, 1, 4)
-        gbox1.addWidget(light_type_input, 1, 1)
+        gbox1.addWidget(self.light_name_input, 0, 1, 1, 4)
+        gbox1.addWidget(self.light_type_input, 1, 1)
         gbox1.addWidget(color_input, 2, 1)
         gbox1.addWidget(r_input, 3, 1)
         gbox1.addWidget(r_slider_input, 3, 2, 1, 3)
@@ -207,8 +211,51 @@ class MainWindow(QWidget):
                 intensity_item.setFlags(intensity_item.flags() & ~Qt.ItemIsEditable)
                 self.lights_list_table.setItem(i, 3, intensity_item)
 
-    # def edit_properties(self):
+    def edit_name(self):
+        selected_rows = self.lights_list_table.selectionModel().selectedRows()
+        if len(selected_rows) != 1:
+            nuke.message("Please select only one light to edit its name")
+            return
 
+        light_name = self.lights_list_table.item(selected_rows[0].row(), 1).text()
+        light_node = nuke.toNode(light_name)
+
+        if not light_node:
+                nuke.message("Light node not found")
+                return
+
+        if not self.light_name_input.text():
+            nuke.message("Please enter a name for the light")
+            self.light_name_input.clear()
+            return
+
+        if self.light_name_input.text()[0].isdigit():
+            nuke.message("Light name cannot start with a number")
+            self.light_name_input.clear()
+            return
+
+        light_node["name"].setValue(self.light_name_input.text())
+        self.lights_list_table.item(selected_rows[0].row(), 1).setText(self.light_name_input.text())
+            
+    def edit_properties(self):
+        selected_rows = self.lights_list_table.selectionModel().selectedRows()
+        if len(selected_rows) == 0:
+            nuke.message("Please select a light to edit its name")
+            return
+
+        for each_row in selected_rows:
+            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_node = nuke.toNode(light_name)
+
+            if not light_node:
+                nuke.message("Light node not found")
+                return
+            
+            if "light_type" in light_node.knobs():
+                light_node["light_type"].setValue(self.light_type_input.currentText())
+                self.lights_list_table.item(each_row.row(), 0).setText(self.light_type_input.currentText())
+            
+        
 def light_editor():
     global window
     window = MainWindow()
