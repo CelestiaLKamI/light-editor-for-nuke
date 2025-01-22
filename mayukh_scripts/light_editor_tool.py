@@ -22,6 +22,7 @@ class MainWindow(QWidget):
         self.lights_list_table.setHorizontalHeaderLabels(["Light Type/Class", "Name", "Color", "Intensity"])
         self.lights_list_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.lights_list_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.lights_list_table.selectionModel().selectionChanged.connect(self.update_selected_rows)
         
         point_light_button = QPushButton("Point")
         spot_light_button = QPushButton("Spot")
@@ -99,40 +100,63 @@ class MainWindow(QWidget):
         self.light_type_input.addItems(["Point", "Spot", "Directional"])
         self.light_type_input.currentIndexChanged.connect(self.edit_properties)
         color_input = QPushButton("Color")
-        r_input = QDoubleSpinBox()
-        r_slider_input = QSlider(Qt.Horizontal)
-        g_input = QDoubleSpinBox()
-        g_slider_input = QSlider(Qt.Horizontal)
-        b_input = QDoubleSpinBox()
-        b_slider_input = QSlider(Qt.Horizontal)
-        intensity_input = QDoubleSpinBox()
-        intensity_slider_input = QSlider(Qt.Horizontal)
-        cone_angle_input = QDoubleSpinBox()
-        cone_angle_slider_input = QSlider(Qt.Horizontal)
-        cone_penumbra_angle_input = QDoubleSpinBox()
-        cone_penumbra_angle_slider_input = QSlider(Qt.Horizontal)
-        cone_falloff_input = QDoubleSpinBox()
-        cone_falloff_slider_input = QSlider(Qt.Horizontal)
-        falloff_type_input = QComboBox()
+        self.r_input = QDoubleSpinBox()
+        self.r_input.setRange(0, 1)
+        self.r_input.valueChanged.connect(self.edit_properties)
+        self.r_slider_input = QSlider(Qt.Horizontal)
+        self.r_slider_input.setRange(0, 1)
+        self.g_input = QDoubleSpinBox()
+        self.g_input.setRange(0, 1)
+        self.g_input.valueChanged.connect(self.edit_properties)
+        self.g_slider_input = QSlider(Qt.Horizontal)
+        self.g_slider_input.setRange(0, 1)
+        self.b_input = QDoubleSpinBox()
+        self.b_input.setRange(0, 1)
+        self.b_input.valueChanged.connect(self.edit_properties)
+        self.b_slider_input = QSlider(Qt.Horizontal)
+        self.b_slider_input.setRange(0, 1)
+        self.intensity_input = QDoubleSpinBox()
+        self.intensity_input.setRange(0, 50)
+        self.intensity_input.valueChanged.connect(self.edit_properties)
+        self.intensity_slider_input = QSlider(Qt.Horizontal)
+        self.intensity_slider_input.setRange(0, 50)
+        self.cone_angle_input = QDoubleSpinBox()
+        self.cone_angle_input.setRange(0, 180)
+        self.cone_angle_input.valueChanged.connect(self.edit_properties)
+        self.cone_angle_slider_input = QSlider(Qt.Horizontal)
+        self.cone_angle_slider_input.setRange(0, 180)
+        self.cone_penumbra_angle_input = QDoubleSpinBox()
+        self.cone_penumbra_angle_input.setRange(-60, 60)
+        self.cone_penumbra_angle_input.valueChanged.connect(self.edit_properties)
+        self.cone_penumbra_angle_slider_input = QSlider(Qt.Horizontal)
+        self.cone_penumbra_angle_slider_input.setRange(-60, 60)
+        self.cone_falloff_input = QDoubleSpinBox()
+        self.cone_falloff_input.setRange(0, 1000)
+        self.cone_falloff_input.valueChanged.connect(self.edit_properties)
+        self.cone_falloff_slider_input = QSlider(Qt.Horizontal)
+        self.cone_falloff_slider_input.setRange(0, 1000)
+        self.falloff_type_input = QComboBox()
+        self.falloff_type_input.addItems(["None", "Linear", "Quadratic", "Cubic"])
+        self.falloff_type_input.currentIndexChanged.connect(self.edit_properties)
 
         gbox1.addWidget(self.light_name_input, 0, 1, 1, 4)
         gbox1.addWidget(self.light_type_input, 1, 1)
         gbox1.addWidget(color_input, 2, 1)
-        gbox1.addWidget(r_input, 3, 1)
-        gbox1.addWidget(r_slider_input, 3, 2, 1, 3)
-        gbox1.addWidget(g_input, 4, 1)
-        gbox1.addWidget(g_slider_input, 4, 2, 1, 3)
-        gbox1.addWidget(b_input, 5, 1)
-        gbox1.addWidget(b_slider_input, 5, 2, 1, 3)
-        gbox1.addWidget(intensity_input, 6, 1)
-        gbox1.addWidget(intensity_slider_input, 6, 2, 1, 3)
-        gbox1.addWidget(cone_angle_input, 7, 1)
-        gbox1.addWidget(cone_angle_slider_input, 7, 2, 1, 3)
-        gbox1.addWidget(cone_penumbra_angle_input, 8, 1)
-        gbox1.addWidget(cone_penumbra_angle_slider_input, 8, 2, 1, 3)
-        gbox1.addWidget(cone_falloff_input, 9, 1)
-        gbox1.addWidget(cone_falloff_slider_input, 9, 2, 1, 3)
-        gbox1.addWidget(falloff_type_input, 10, 1)
+        gbox1.addWidget(self.r_input, 3, 1)
+        gbox1.addWidget(self.r_slider_input, 3, 2, 1, 3)
+        gbox1.addWidget(self.g_input, 4, 1)
+        gbox1.addWidget(self.g_slider_input, 4, 2, 1, 3)
+        gbox1.addWidget(self.b_input, 5, 1)
+        gbox1.addWidget(self.b_slider_input, 5, 2, 1, 3)
+        gbox1.addWidget(self.intensity_input, 6, 1)
+        gbox1.addWidget(self.intensity_slider_input, 6, 2, 1, 3)
+        gbox1.addWidget(self.cone_angle_input, 7, 1)
+        gbox1.addWidget(self.cone_angle_slider_input, 7, 2, 1, 3)
+        gbox1.addWidget(self.cone_penumbra_angle_input, 8, 1)
+        gbox1.addWidget(self.cone_penumbra_angle_slider_input, 8, 2, 1, 3)
+        gbox1.addWidget(self.cone_falloff_input, 9, 1)
+        gbox1.addWidget(self.cone_falloff_slider_input, 9, 2, 1, 3)
+        gbox1.addWidget(self.falloff_type_input, 10, 1)
 
         x_translate_input = QDoubleSpinBox()
         y_translate_input = QDoubleSpinBox()
@@ -211,13 +235,51 @@ class MainWindow(QWidget):
                 intensity_item.setFlags(intensity_item.flags() & ~Qt.ItemIsEditable)
                 self.lights_list_table.setItem(i, 3, intensity_item)
 
-    def edit_name(self):
-        selected_rows = self.lights_list_table.selectionModel().selectedRows()
-        if len(selected_rows) != 1:
-            nuke.message("Please select only one light to edit its name")
+    def update_selected_rows(self):
+        self.selected_rows = self.lights_list_table.selectionModel().selectedRows()
+        if len(self.selected_rows) > 1:
+            self.light_name_input.setDisabled(True)
+        else:
+            self.light_name_input.setEnabled(True)
+            self.update_light_properties_values()
+
+    def update_light_properties_values(self):
+        if not self.selected_rows:
             return
 
-        light_name = self.lights_list_table.item(selected_rows[0].row(), 1).text()
+        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 1).text()
+        light_node = nuke.toNode(light_name)
+
+        if not light_node:
+            nuke.message("Light node not found")
+            return
+
+        if "light_type" in light_node.knobs():
+            self.light_type_input.setCurrentText(light_node["light_type"].value())
+        
+        if "color" in light_node.knobs():
+            color = light_node["color"].value()
+            self.r_input.setValue(color[0])
+            self.g_input.setValue(color[1])
+            self.b_input.setValue(color[2])
+
+        if "intensity" in light_node.knobs():
+            self.intensity_input.setValue(light_node["intensity"].value())
+
+        if "cone_angle" in light_node.knobs():
+            self.cone_angle_input.setValue(light_node["cone_angle"].value())
+
+        if "cone_penumbra_angle" in light_node.knobs():
+            self.cone_penumbra_angle_input.setValue(light_node["cone_penumbra_angle"].value())
+        
+        if "cone_falloff" in light_node.knobs():
+            self.cone_falloff_input.setValue(light_node["cone_falloff"].value())
+
+        if "falloff_type" in light_node.knobs():
+            self.falloff_type_input.setCurrentText(light_node["falloff_type"].value())
+
+    def edit_name(self):
+        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 1).text()
         light_node = nuke.toNode(light_name)
 
         if not light_node:
@@ -235,15 +297,14 @@ class MainWindow(QWidget):
             return
 
         light_node["name"].setValue(self.light_name_input.text())
-        self.lights_list_table.item(selected_rows[0].row(), 1).setText(self.light_name_input.text())
-            
+        self.lights_list_table.item(self.selected_rows[0].row(), 1).setText(self.light_name_input.text())
+     
     def edit_properties(self):
-        selected_rows = self.lights_list_table.selectionModel().selectedRows()
-        if len(selected_rows) == 0:
-            nuke.message("Please select a light to edit its name")
+        if not self.selected_rows:
+            nuke.message("Please select atleast a light to edit properties")
             return
-
-        for each_row in selected_rows:
+        
+        for each_row in self.selected_rows:
             light_name = self.lights_list_table.item(each_row.row(), 1).text()
             light_node = nuke.toNode(light_name)
 
@@ -254,8 +315,28 @@ class MainWindow(QWidget):
             if "light_type" in light_node.knobs():
                 light_node["light_type"].setValue(self.light_type_input.currentText())
                 self.lights_list_table.item(each_row.row(), 0).setText(self.light_type_input.currentText())
+                            
+            if "intensity" in light_node.knobs():
+                light_node["intensity"].setValue(self.intensity_input.value())
+                self.lights_list_table.item(each_row.row(), 3).setText(str(self.intensity_input.value()))
             
-        
+            if "cone_angle" in light_node.knobs():
+                light_node["cone_angle"].setValue(self.cone_angle_input.value())
+
+            if "cone_penumbra_angle" in light_node.knobs():
+                light_node["cone_penumbra_angle"].setValue(self.cone_penumbra_angle_input.value())
+            
+            if "cone_falloff" in light_node.knobs():
+                light_node["cone_falloff"].setValue(self.cone_falloff_input.value())
+
+            if "falloff_type" in light_node.knobs():
+                light_node["falloff_type"].setValue(self.falloff_type_input.currentText())
+            
+            if "color" in light_node.knobs():
+                light_node["color"].setValue([self.r_input.value(), self.g_input.value(), self.b_input.value()])
+                self.lights_list_table.item(each_row.row(), 2).setText(str([self.r_input.value(), self.g_input.value(), self.b_input.value()]))
+
+
 def light_editor():
     global window
     window = MainWindow()
