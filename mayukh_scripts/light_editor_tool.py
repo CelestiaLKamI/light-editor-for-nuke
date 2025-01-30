@@ -113,9 +113,10 @@ class MainWindow(QWidget):
         self.light_name_input.setPlaceholderText("Enter Light Name")
         self.light_name_input.textChanged.connect(self.edit_name)
         self.light_type_input = QComboBox()
-        self.light_type_input.addItems(["Point", "Spot", "Directional"])
+        self.light_type_input.addItems(["point", "directional", "spot"])
         self.light_type_input.currentIndexChanged.connect(self.edit_properties)
-        color_input = QPushButton("Color")
+        self.color_input = QPushButton("Color")
+        self.color_input.clicked.connect(self.color_pick)
         self.r_input = QDoubleSpinBox()
         self.r_input.setRange(0, 1)
         self.r_input.valueChanged.connect(self.edit_properties)
@@ -158,7 +159,7 @@ class MainWindow(QWidget):
         # Add input fields to the grid layout
         gbox1.addWidget(self.light_name_input, 0, 1, 1, 4)
         gbox1.addWidget(self.light_type_input, 1, 1)
-        gbox1.addWidget(color_input, 2, 1)
+        gbox1.addWidget(self.color_input, 2, 1)
         gbox1.addWidget(self.r_input, 3, 1)
         gbox1.addWidget(self.r_slider_input, 3, 2, 1, 3)
         gbox1.addWidget(self.g_input, 4, 1)
@@ -369,32 +370,88 @@ class MainWindow(QWidget):
             self.uniform_scale_input.setValue(light_node["uniform_scale"].value())
 
     def edit_name(self):
+    
         """
         Edits the name of the selected light node.
         """
-        # Get the name of the selected light node
-        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 1).text()
-        light_node = nuke.toNode(light_name)
+        # Ensure exactly one light is selected
+        if len(self.selected_rows) != 1:
+            nuke.message("Please select exactly one light to rename.")
+            return
+
+        # Get selected row index
+        row = self.selected_rows[0].row()
         
-        # Check if the light node exists
+        # Get current light name from the table
+        old_name = self.lights_list_table.item(row, 1).text()
+        light_node = nuke.toNode(old_name)
+        
         if not light_node:
-            nuke.message("Light node not found")
+            nuke.message("Selected light node not found in Nuke.")
             return
 
-        # Check if the light name input is empty
-        if not self.light_name_input.text():
-            nuke.message("Please enter a name for the light")
-            self.light_name_input.clear()
+        # Get the new name from the input field
+        new_name = self.light_name_input.text().strip()
+
+        # Validate the new name
+        if not new_name:
+            nuke.message("Please enter a valid light name.")
             return
 
-        # Check if the light name starts with a number
-        if self.light_name_input.text()[0].isdigit():
-            nuke.message("Light name cannot start with a number")
-            self.light_name_input.clear()
+        if new_name[0].isdigit():
+            nuke.message("Light name cannot start with a number.")
             return
 
-        # Set the new name for the light node
-        light_node["name"].setValue(self.light_name_input.text())
+        # Check if the new name already exists in Nuke
+        if nuke.toNode(new_name):
+            nuke.message("A node with this name already exists. Choose a different name.")
+            return
+
+        # Apply the new name to the light node
+        light_node["name"].setValue(new_name)
+
+        # Update the name in the table
+        self.lights_list_table.item(row, 1).setText(new_name)
+
+    def color_pick(self):
+        """
+        Opens the color picker dialog to select a color for the light node.
+        """
+        # Check if there are any selected rows
+        if not self.selected_rows:
+            nuke.message("Please select at least one light to pick a color")
+            return
+
+        # Open the color picker dialog
+        color = nuke.getColor()
+
+        for each_row in self.selected_rows:
+            # Get the name of the light node
+            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_node = nuke.toNode(light_name)
+
+            # Check if the light node exists
+            if not light_node:
+                nuke.message("Light node not found")
+                return
+
+            if color:
+                print(f"Raw color value: {color}")  # Debugging raw color value
+                
+                # Extract RGBA components using correct bitwise operations
+                r = (color >> 24) & 255 # Alpha
+                g = (color >> 16) & 255 # Red
+                b = (color >> 8) & 255 # Green
+                a = (color >> 0) & 255 # Blue
+                color_normalized = [r, g, b, a]
+                # Update GUI input fields with selected color
+                self.r_input.setValue(r)
+                self.g_input.setValue(g)
+                self.b_input.setValue(b)
+
+        # Update the color display with the last selected color
+        if color:
+            self.color_input.setStyleSheet(f"background-color: rgb({r}, {g}, {b});")
 
     def edit_properties(self):
         """
@@ -469,7 +526,7 @@ class MainWindow(QWidget):
             # Update the translation, rotation, and scale properties
             light_node["translate"].setValue([self.x_translate_input.value(), self.y_translate_input.value(), self.z_translate_input.value()])
             light_node["rotate"].setValue([self.x_rotate_input.value(), self.y_rotate_input.value(), self.z_rotate_input.value()])
-            light_node["scale"].setValue([self.x_scale_input.value(), self.y_scale_input.value(), self.z_scale_input.value()])
+            light_node["scaling"].setValue([self.x_scale_input.value(), self.y_scale_input.value(), self.z_scale_input.value()])
             light_node["uniform_scale"].setValue(self.uniform_scale_input.value())
 
 def light_editor():
