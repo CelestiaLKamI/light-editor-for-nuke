@@ -39,7 +39,9 @@ class MainWindow(QWidget):
         spot_light_button = QPushButton("Spot")
         directional_light_button = QPushButton("Directional")
         enable_light_button = QPushButton("Enable")
+        enable_light_button.clicked.connect(self.enable)
         disable_light_button = QPushButton("Disable")
+        disable_light_button.clicked.connect(self.disable)
 
         # Create labels for light properties
         light_name_label = QLabel("Light Name")
@@ -303,6 +305,52 @@ class MainWindow(QWidget):
         else:
             self.light_name_input.setDisabled(False)
             self.update_light_properties_values()
+    
+    def enable(self):
+        """
+        Enables the selected light nodes.
+        """
+        # Check if there are any selected rows
+        if not self.selected_rows:
+            nuke.message("Please select at least one light to enable")
+            return
+        
+        # Iterate over each selected row
+        for each_row in self.selected_rows:
+            # Get the name of the light node
+            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_node = nuke.toNode(light_name)
+
+            # Check if the light node exists
+            if not light_node:
+                nuke.message("Light node not found")
+                return
+
+            # Enable the light node
+            light_node["disable"].setValue(False)
+
+    def disable(self):
+        """
+        Disables the selected light nodes.
+        """
+        # Check if there are any selected rows
+        if not self.selected_rows:
+            nuke.message("Please select at least one light to disable")
+            return
+        
+        # Iterate over each selected row
+        for each_row in self.selected_rows:
+            # Get the name of the light node
+            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_node = nuke.toNode(light_name)
+
+            # Check if the light node exists
+            if not light_node:
+                nuke.message("Light node not found")
+                return
+
+            # Disable the light node
+            light_node["disable"].setValue(True)
 
     def update_light_properties_values(self):
         """
@@ -536,7 +584,7 @@ class MainWindow(QWidget):
             light_node["rotate"].setValue([self.x_rotate_input.value(), self.y_rotate_input.value(), self.z_rotate_input.value()])
             light_node["scaling"].setValue([self.x_scale_input.value(), self.y_scale_input.value(), self.z_scale_input.value()])
             light_node["uniform_scale"].setValue(self.uniform_scale_input.value())
-
+        
 def light_editor():
     """
     Initializes and shows the Light Editor Tool.
