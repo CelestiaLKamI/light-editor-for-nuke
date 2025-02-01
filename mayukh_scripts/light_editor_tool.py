@@ -116,55 +116,62 @@ class MainWindow(QWidget):
         self.light_name_input.textChanged.connect(self.edit_name)
         self.light_type_input = QComboBox()
         self.light_type_input.addItems(["point", "directional", "spot"])
-        self.light_type_input.currentIndexChanged.connect(self.edit_properties)
+        self.light_type_input.currentIndexChanged.connect(self.edit_properties_from_spinbox)
         self.color_input = QPushButton("Color")
         self.color_input.setMaximumWidth(50)
         self.color_input.clicked.connect(self.color_pick)
         self.r_input = QDoubleSpinBox()
         self.r_input.setMaximumWidth(50)
         self.r_input.setRange(0, 1)
-        self.r_input.valueChanged.connect(self.edit_properties)
+        self.r_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.r_slider_input = QSlider(Qt.Horizontal)
-        self.r_slider_input.setRange(0, 1)
+        self.r_slider_input.setRange(1, 100)
+        self.r_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.g_input = QDoubleSpinBox()
         self.g_input.setMaximumWidth(50)
         self.g_input.setRange(0, 1)
-        self.g_input.valueChanged.connect(self.edit_properties)
+        self.g_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.g_slider_input = QSlider(Qt.Horizontal)
-        self.g_slider_input.setRange(0, 1)
+        self.g_slider_input.setRange(1, 100)
+        self.g_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.b_input = QDoubleSpinBox()
         self.b_input.setMaximumWidth(50)
         self.b_input.setRange(0, 1)
-        self.b_input.valueChanged.connect(self.edit_properties)
+        self.b_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.b_slider_input = QSlider(Qt.Horizontal)
-        self.b_slider_input.setRange(0, 1)
+        self.b_slider_input.setRange(1, 100)
+        self.b_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.intensity_input = QDoubleSpinBox()
         self.intensity_input.setMaximumWidth(50)
         self.intensity_input.setRange(0, 50)
-        self.intensity_input.valueChanged.connect(self.edit_properties)
+        self.intensity_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.intensity_slider_input = QSlider(Qt.Horizontal)
-        self.intensity_slider_input.setRange(0, 50)
+        self.intensity_slider_input.setRange(0, 50) #(0, 50)
+        self.intensity_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.cone_angle_input = QDoubleSpinBox()
         self.cone_angle_input.setMaximumWidth(50)
         self.cone_angle_input.setRange(0, 180)
-        self.cone_angle_input.valueChanged.connect(self.edit_properties)
+        self.cone_angle_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.cone_angle_slider_input = QSlider(Qt.Horizontal)
         self.cone_angle_slider_input.setRange(0, 180)
+        self.cone_angle_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.cone_penumbra_angle_input = QDoubleSpinBox()
         self.cone_penumbra_angle_input.setMaximumWidth(50)
         self.cone_penumbra_angle_input.setRange(-60, 60)
-        self.cone_penumbra_angle_input.valueChanged.connect(self.edit_properties)
+        self.cone_penumbra_angle_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.cone_penumbra_angle_slider_input = QSlider(Qt.Horizontal)
         self.cone_penumbra_angle_slider_input.setRange(-60, 60)
+        self.cone_penumbra_angle_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.cone_falloff_input = QDoubleSpinBox()
         self.cone_falloff_input.setMaximumWidth(50)
         self.cone_falloff_input.setRange(0, 1000)
-        self.cone_falloff_input.valueChanged.connect(self.edit_properties)
+        self.cone_falloff_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.cone_falloff_slider_input = QSlider(Qt.Horizontal)
         self.cone_falloff_slider_input.setRange(0, 1000)
+        self.cone_falloff_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.falloff_type_input = QComboBox()
         self.falloff_type_input.addItems(["None", "Linear", "Quadratic", "Cubic"])
-        self.falloff_type_input.currentIndexChanged.connect(self.edit_properties)
+        self.falloff_type_input.currentIndexChanged.connect(self.edit_properties_from_spinbox)
 
         # Add input fields to the grid layout
         gbox1.addWidget(self.light_name_input, 0, 1, 1, 4)
@@ -206,10 +213,11 @@ class MainWindow(QWidget):
         self.z_scale_input = QDoubleSpinBox()
         self.z_scale_input.valueChanged.connect(self.edit_translations)
         self.uniform_scale_input = QDoubleSpinBox()
+        self.uniform_scale_input.setRange(0.01, 10)
         self.uniform_scale_input.valueChanged.connect(self.edit_translations)
         self.uniform_scale_slider_input = QSlider(Qt.Horizontal)
         self.uniform_scale_slider_input.setRange(0.01, 10)
-        self.uniform_scale_slider_input.valueChanged.connect(self.edit_translations)
+        self.uniform_scale_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
 
         # Add transformation input fields to the grid layout
         gbox2.addWidget(self.x_translate_input, 0, 2)
@@ -304,7 +312,8 @@ class MainWindow(QWidget):
             self.light_name_input.setDisabled(True)
         else:
             self.light_name_input.setDisabled(False)
-            self.update_light_properties_values()
+            self.update_spinbox_values()
+            self.update_slider_values()
     
     def enable(self):
         """
@@ -352,7 +361,7 @@ class MainWindow(QWidget):
             # Disable the light node
             light_node["disable"].setValue(True)
 
-    def update_light_properties_values(self):
+    def update_spinbox_values(self):
         """
         Updates the light properties input fields with the values from the selected light node.
         """
@@ -424,6 +433,27 @@ class MainWindow(QWidget):
         # Update the uniform scale input field if the knob exists
         if "uniform_scale" in light_node.knobs():
             self.uniform_scale_input.setValue(light_node["uniform_scale"].value())
+
+    def update_slider_values(self):
+        # Update the color slider values
+        self.r_slider_input.setValue(self.r_input.value() * 100)
+        self.g_slider_input.setValue(self.g_input.value() * 100)
+        self.b_slider_input.setValue(self.b_input.value() * 100)
+
+        # Update the intensity slider value
+        self.intensity_slider_input.setValue(self.intensity_input.value())
+
+        # Update the cone angle slider value
+        self.cone_angle_slider_input.setValue(self.cone_angle_input.value())
+
+        # Update the cone penumbra angle slider value
+        self.cone_penumbra_angle_slider_input.setValue(self.cone_penumbra_angle_input.value())
+
+        # Update the cone falloff slider value
+        self.cone_falloff_slider_input.setValue(self.cone_falloff_input.value() )
+
+        # Update the uniform scale slider value
+        self.uniform_scale_slider_input.setValue(self.uniform_scale_input.value())
 
     def edit_name(self):
     
@@ -509,7 +539,7 @@ class MainWindow(QWidget):
         if color:
             self.color_input.setStyleSheet(f"background-color: rgb({r}, {g}, {b});")
 
-    def edit_properties(self):
+    def edit_properties_from_spinbox(self):
         """
         Edits the properties of the selected light nodes.
         """
@@ -559,6 +589,52 @@ class MainWindow(QWidget):
                 light_node["color"].setValue([self.r_input.value(), self.g_input.value(), self.b_input.value()])
                 self.lights_list_table.item(each_row.row(), 2).setText(str([self.r_input.value(), self.g_input.value(), self.b_input.value()]))
 
+        self.update_slider_values()
+
+    def edit_properties_from_sliders(self):
+        """Edits the properties of the selected light nodes using the sliders."""
+        # Check if there are any selected rows
+        if not self.selected_rows:
+            nuke.message("Please select at least one light to edit properties")
+            return
+
+        # Iterate over each selected row
+        for each_row in self.selected_rows:
+            # Get the name of the light node
+            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_node = nuke.toNode(light_name)
+
+            # Check if the light node exists
+            if not light_node:
+                nuke.message("Light node not found")
+                return
+
+            # Update the color if the knob exists
+            if "color" in light_node.knobs():
+                light_node["color"].setValue([self.r_slider_input.value() / 100, self.g_slider_input.value() / 100, self.b_slider_input.value() / 100])
+
+            # Update the intensity if the knob exists
+            if "intensity" in light_node.knobs():
+                light_node["intensity"].setValue(self.intensity_slider_input.value())
+
+            # Update the cone angle if the knob exists
+            if "cone_angle" in light_node.knobs():
+                light_node["cone_angle"].setValue(self.cone_angle_slider_input.value())
+
+            # Update the cone penumbra angle if the knob exists
+            if "cone_penumbra_angle" in light_node.knobs():
+                light_node["cone_penumbra_angle"].setValue(self.cone_penumbra_angle_slider_input.value())
+
+            # Update the cone falloff if the knob exists
+            if "cone_falloff" in light_node.knobs():
+                light_node["cone_falloff"].setValue(self.cone_falloff_slider_input.value())
+
+            # Update the uniform scale if the knob exists
+            if "uniform_scale" in light_node.knobs():
+                light_node["uniform_scale"].setValue(self.uniform_scale_slider_input.value())
+        
+        self.update_spinbox_values()
+
     def edit_translations(self):
         """
         Edits the translation, rotation, and scale properties of the selected light nodes.
@@ -584,7 +660,19 @@ class MainWindow(QWidget):
             light_node["rotate"].setValue([self.x_rotate_input.value(), self.y_rotate_input.value(), self.z_rotate_input.value()])
             light_node["scaling"].setValue([self.x_scale_input.value(), self.y_scale_input.value(), self.z_scale_input.value()])
             light_node["uniform_scale"].setValue(self.uniform_scale_input.value())
-        
+
+    def reset_to_default(self):
+        """
+        Resets the selected light nodes to their default properties.
+        """
+        for each_row in self.selected_rows:
+            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_node = nuke.toNode(light_name)
+            for knobs in light_node.knobs():
+                if knobs not in ["name", "disable"]:
+                    light_node[knobs].setValue(light_node[knobs].defaultValue())
+
+
 def light_editor():
     """
     Initializes and shows the Light Editor Tool.
