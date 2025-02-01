@@ -38,10 +38,10 @@ class MainWindow(QWidget):
         point_light_button = QPushButton("Point")
         spot_light_button = QPushButton("Spot")
         directional_light_button = QPushButton("Directional")
-        enable_light_button = QPushButton("Enable")
-        enable_light_button.clicked.connect(self.enable)
-        disable_light_button = QPushButton("Disable")
-        disable_light_button.clicked.connect(self.disable)
+        self.enable_light_button = QPushButton("Disable")
+        self.enable_light_button.clicked.connect(self.enable_disable)
+        self.reset_button = QPushButton("Reset")
+        self.reset_button.clicked.connect(self.reset_to_default)
 
         # Create labels for light properties
         light_name_label = QLabel("Light Name")
@@ -236,8 +236,8 @@ class MainWindow(QWidget):
         hbox1.addWidget(point_light_button)
         hbox1.addWidget(spot_light_button)
         hbox1.addWidget(directional_light_button)
-        hbox1.addWidget(enable_light_button)
-        hbox1.addWidget(disable_light_button)
+        hbox1.addWidget(self.enable_light_button)
+        hbox1.addWidget(self.reset_button)
 
         # Add layouts to the vertical layout
         vbox1.addLayout(hbox1)
@@ -314,52 +314,56 @@ class MainWindow(QWidget):
             self.light_name_input.setDisabled(False)
             self.update_spinbox_values()
             self.update_slider_values()
-    
-    def enable(self):
+            self.update_buttons()
+
+    def update_buttons(self):
         """
-        Enables the selected light nodes.
+        Updates the enable/disable button text based on the selected light nodes.
         """
-        # Check if there are any selected rows
         if not self.selected_rows:
-            nuke.message("Please select at least one light to enable")
+            self.enable_light_button.setText("Disable")  # Default text
+            self.enable_light_button.setDisabled(True)
             return
+
+        # Enable button since at least one row is selected
+        self.enable_light_button.setDisabled(False)
+
+        if len(self.selected_rows) > 1:
+            self.enable_light_button.setText("Disable")  # Multiple selection case
+            return
+
+        # Single selection case: Update based on disable state
+        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 1).text()
+        light_node = nuke.toNode(light_name)
+
+        if not light_node:
+            self.enable_light_button.setText("Disable")
+            return
+
+        self.enable_light_button.setText("Enable" if light_node["disable"].value() else "Disable")
         
-        # Iterate over each selected row
+    def enable_disable(self):
+        """
+        Toggles the enable/disable state of the selected light nodes.
+        """
+        if not self.selected_rows:
+            nuke.message("Please select at least one light to toggle enable/disable")
+            return
+
         for each_row in self.selected_rows:
-            # Get the name of the light node
             light_name = self.lights_list_table.item(each_row.row(), 1).text()
             light_node = nuke.toNode(light_name)
 
-            # Check if the light node exists
             if not light_node:
-                nuke.message("Light node not found")
+                nuke.message(f"Light node '{light_name}' not found.")
                 return
 
-            # Enable the light node
-            light_node["disable"].setValue(False)
+            # Toggle disable state
+            current_state = light_node["disable"].value()
+            light_node["disable"].setValue(not current_state)
 
-    def disable(self):
-        """
-        Disables the selected light nodes.
-        """
-        # Check if there are any selected rows
-        if not self.selected_rows:
-            nuke.message("Please select at least one light to disable")
-            return
-        
-        # Iterate over each selected row
-        for each_row in self.selected_rows:
-            # Get the name of the light node
-            light_name = self.lights_list_table.item(each_row.row(), 1).text()
-            light_node = nuke.toNode(light_name)
-
-            # Check if the light node exists
-            if not light_node:
-                nuke.message("Light node not found")
-                return
-
-            # Disable the light node
-            light_node["disable"].setValue(True)
+        # Update button text after toggling
+        self.update_buttons()
 
     def update_spinbox_values(self):
         """
