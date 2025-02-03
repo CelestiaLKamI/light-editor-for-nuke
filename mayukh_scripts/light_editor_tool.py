@@ -29,7 +29,7 @@ class MainWindow(QWidget):
         # Create the lights list table
         self.lights_list_table = QTableWidget()
         self.lights_list_table.setColumnCount(4)
-        self.lights_list_table.setHorizontalHeaderLabels(["Light Type/Class", "Name", "Color", "Intensity"])
+        self.lights_list_table.setHorizontalHeaderLabels(["Name", "Light Type", "Color", "Intensity"])
         self.lights_list_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.lights_list_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.lights_list_table.selectionModel().selectionChanged.connect(self.update_selected_rows)
@@ -272,23 +272,23 @@ class MainWindow(QWidget):
         
         # Iterate over each light node and populate the table
         for i, each_light in enumerate(light_nodes):
+            # Check if the light node has a "name" knob
+            if each_light["name"]:
+                name_item = QTableWidgetItem(each_light["name"].getValue())
+                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+                self.lights_list_table.setItem(i, 0, name_item)
+            
             # Check if the light node has a "light_type" knob
             if "light_type" in each_light.knobs():
                 if each_light["light_type"]:   
                     light_type_item = QTableWidgetItem(each_light["light_type"].value())
                     light_type_item.setFlags(light_type_item.flags() & ~Qt.ItemIsEditable)
-                    self.lights_list_table.setItem(i, 0, light_type_item)
+                    self.lights_list_table.setItem(i, 1, light_type_item)
             else:
                 light_type_item = QTableWidgetItem(each_light.Class())
                 light_type_item.setFlags(light_type_item.flags() & ~Qt.ItemIsEditable)
-                self.lights_list_table.setItem(i, 0, light_type_item)                
-            
-            # Check if the light node has a "name" knob
-            if each_light["name"]:
-                name_item = QTableWidgetItem(each_light["name"].getValue())
-                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-                self.lights_list_table.setItem(i, 1, name_item)
-            
+                self.lights_list_table.setItem(i, 1, light_type_item)                
+               
             # Check if the light node has a "color" knob
             if each_light["color"]: 
                 color_item = QTableWidgetItem(str(each_light["color"].getValue()))
@@ -312,9 +312,9 @@ class MainWindow(QWidget):
             self.light_name_input.setDisabled(True)
         else:
             self.light_name_input.setDisabled(False)
-            self.update_spinbox_values()
-            self.update_slider_values()
-            self.update_buttons()
+        self.update_spinbox_values()
+        self.update_slider_values()
+        self.update_buttons()
 
     def update_buttons(self):
         """
@@ -333,7 +333,7 @@ class MainWindow(QWidget):
             return
 
         # Single selection case: Update based on disable state
-        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 1).text()
+        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 0).text()
         light_node = nuke.toNode(light_name)
 
         if not light_node:
@@ -351,7 +351,7 @@ class MainWindow(QWidget):
             return
 
         for each_row in self.selected_rows:
-            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
             if not light_node:
@@ -374,7 +374,7 @@ class MainWindow(QWidget):
             return
 
         # Get the name of the selected light node
-        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 1).text()
+        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 0).text()
         light_node = nuke.toNode(light_name)
 
         # Check if the light node exists
@@ -389,7 +389,7 @@ class MainWindow(QWidget):
         # Update the color input fields if the knob exists
         if "color" in light_node.knobs():
             color = light_node["color"].value()
-            self.r_input.setValue(color[0])
+            self.r_input.setValue(str(color[0]))
             self.g_input.setValue(color[1])
             self.b_input.setValue(color[2])
 
@@ -473,7 +473,7 @@ class MainWindow(QWidget):
         row = self.selected_rows[0].row()
         
         # Get current light name from the table
-        old_name = self.lights_list_table.item(row, 1).text()
+        old_name = self.lights_list_table.item(row, 0).text()
         light_node = nuke.toNode(old_name)
         
         if not light_node:
@@ -501,7 +501,7 @@ class MainWindow(QWidget):
         light_node["name"].setValue(new_name)
 
         # Update the name in the table
-        self.lights_list_table.item(row, 1).setText(new_name)
+        self.lights_list_table.item(row, 0).setText(new_name)
 
     def color_pick(self):
         """
@@ -517,7 +517,7 @@ class MainWindow(QWidget):
 
         for each_row in self.selected_rows:
             # Get the name of the light node
-            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
             # Check if the light node exists
@@ -555,7 +555,7 @@ class MainWindow(QWidget):
         # Iterate over each selected row
         for each_row in self.selected_rows:
             # Get the name of the light node
-            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
             # Check if the light node exists
@@ -605,7 +605,7 @@ class MainWindow(QWidget):
         # Iterate over each selected row
         for each_row in self.selected_rows:
             # Get the name of the light node
-            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
             # Check if the light node exists
@@ -651,7 +651,7 @@ class MainWindow(QWidget):
         # Iterate over each selected row
         for each_row in self.selected_rows:
             # Get the name of the light node
-            light_name = self.lights_list_table.item(each_row.row(), 1).text()
+            light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
             # Check if the light node exists
@@ -669,13 +669,44 @@ class MainWindow(QWidget):
         """
         Resets the selected light nodes to their default properties.
         """
-        for each_row in self.selected_rows:
-            light_name = self.lights_list_table.item(each_row.row(), 1).text()
-            light_node = nuke.toNode(light_name)
-            for knobs in light_node.knobs():
-                if knobs not in ["name", "disable"]:
-                    light_node[knobs].setValue(light_node[knobs].defaultValue())
+        if not self.selected_rows:
+            nuke.message("Please select at least one light to reset.")
+            return
 
+        for each_row in self.selected_rows:
+            light_name = self.lights_list_table.item(each_row.row(), 0).text()
+            light_node = nuke.toNode(light_name)
+
+            if not light_node:
+                nuke.message(f"Light node '{light_name}' not found.")
+                return
+
+            for knob_name, knob in light_node.knobs().items():
+                if knob_name in ["name", "disable"]:
+                    continue  # Skip name and disable knobs
+
+                try:
+                    if hasattr(knob, "defaultValue"):
+                        default_value = knob.defaultValue()
+                        
+                        # Handle different knob types properly
+                        if isinstance(default_value, (int, float, str)):  
+                            light_node[knob_name].setValue(default_value)
+
+                        elif isinstance(default_value, (tuple, list)):  
+                            light_node[knob_name].setValue(list(default_value))  # Convert tuples to lists if necessary
+
+                        elif isinstance(default_value, bool):
+                            light_node[knob_name].setValue(bool(default_value))
+
+                        else:
+                            print(f"Skipping {knob_name}: Unsupported default value type")
+
+                except Exception as e:
+                    print(f"Error resetting {knob_name} in {light_name}: {e}")
+
+        # Refresh UI fields and table after reset
+        self.update_selected_rows()
 
 def light_editor():
     """
