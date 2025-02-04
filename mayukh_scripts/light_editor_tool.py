@@ -35,9 +35,6 @@ class MainWindow(QWidget):
         self.lights_list_table.selectionModel().selectionChanged.connect(self.update_selected_rows)
         
         # Create light control buttons
-        # point_light_button = QPushButton("Point")
-        # spot_light_button = QPushButton("Spot")
-        # directional_light_button = QPushButton("Directional")
         self.enable_light_button = QPushButton("Disable")
         self.enable_light_button.clicked.connect(self.enable_disable)
         self.reset_button = QPushButton("Reset")
