@@ -1,5 +1,5 @@
 import nuke
-from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QDoubleSpinBox, QSlider, QLabel, QLineEdit, QComboBox, QFrame, QHBoxLayout, QVBoxLayout, QGridLayout
+from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QDoubleSpinBox, QSlider, QLabel, QLineEdit, QComboBox, QFrame, QHBoxLayout, QVBoxLayout, QGridLayout, QSizePolicy
 from PySide2.QtCore import Qt
 
 class MainWindow(QWidget):
@@ -14,7 +14,7 @@ class MainWindow(QWidget):
         super().__init__()
 
         # Create layout containers
-        hbox1 = QHBoxLayout()
+        gbox0 = QGridLayout()
         hbox2 = QHBoxLayout()
         vbox1 = QVBoxLayout()
         vbox2 = QVBoxLayout()
@@ -35,13 +35,17 @@ class MainWindow(QWidget):
         self.lights_list_table.selectionModel().selectionChanged.connect(self.update_selected_rows)
         
         # Create light control buttons
-        point_light_button = QPushButton("Point")
-        spot_light_button = QPushButton("Spot")
-        directional_light_button = QPushButton("Directional")
+        # point_light_button = QPushButton("Point")
+        # spot_light_button = QPushButton("Spot")
+        # directional_light_button = QPushButton("Directional")
         self.enable_light_button = QPushButton("Disable")
         self.enable_light_button.clicked.connect(self.enable_disable)
         self.reset_button = QPushButton("Reset")
         self.reset_button.clicked.connect(self.reset_to_default)
+
+        gbox0.setColumnStretch(0, 2)
+        gbox0.addWidget(self.enable_light_button, 0, 4)
+        gbox0.addWidget(self.reset_button, 0, 5)
 
         # Create labels for light properties
         light_name_label = QLabel("Light Name")
@@ -232,15 +236,8 @@ class MainWindow(QWidget):
         gbox2.addWidget(self.uniform_scale_input, 3, 2)
         gbox2.addWidget(self.uniform_scale_slider_input, 3, 3, 1, 4)
 
-        # Add buttons to the horizontal layout
-        hbox1.addWidget(point_light_button)
-        hbox1.addWidget(spot_light_button)
-        hbox1.addWidget(directional_light_button)
-        hbox1.addWidget(self.enable_light_button)
-        hbox1.addWidget(self.reset_button)
-
         # Add layouts to the vertical layout
-        vbox1.addLayout(hbox1)
+        vbox1.addLayout(gbox0)
         vbox1.addWidget(self.lights_list_table)
         vbox2.addLayout(gbox1)
         vbox2.addWidget(horizontal_separator)
@@ -252,7 +249,7 @@ class MainWindow(QWidget):
 
         # Set the main layout
         self.setLayout(hbox2)
-
+        
         # Populate the table with light nodes
         self.populate_table()
 
@@ -260,25 +257,17 @@ class MainWindow(QWidget):
         """
         Populates the lights list table with light nodes from the Nuke script.
         """
-        # Get all nodes in the Nuke script
         all_nodes = nuke.allNodes()
-        # Define the target classes for light nodes
         target_classes = ["Light", "Light2", "Light3", "Light4"]
-        # Filter light nodes based on the target classes
         light_nodes = [node for node in all_nodes if node.Class() in target_classes]
-
-        # Set the row count of the table to the number of light nodes
         self.lights_list_table.setRowCount(len(light_nodes))
         
-        # Iterate over each light node and populate the table
         for i, each_light in enumerate(light_nodes):
-            # Check if the light node has a "name" knob
             if each_light["name"]:
                 name_item = QTableWidgetItem(each_light["name"].getValue())
                 name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
                 self.lights_list_table.setItem(i, 0, name_item)
             
-            # Check if the light node has a "light_type" knob
             if "light_type" in each_light.knobs():
                 if each_light["light_type"]:   
                     light_type_item = QTableWidgetItem(each_light["light_type"].value())
@@ -289,34 +278,46 @@ class MainWindow(QWidget):
                 light_type_item.setFlags(light_type_item.flags() & ~Qt.ItemIsEditable)
                 self.lights_list_table.setItem(i, 1, light_type_item)                
                
-            # Check if the light node has a "color" knob
-            if each_light["color"]: 
+            if each_light["color"]:
                 color_item = QTableWidgetItem(str(each_light["color"].getValue()))
                 color_item.setFlags(color_item.flags() & ~Qt.ItemIsEditable)
                 self.lights_list_table.setItem(i, 2, color_item)
             
-            # Check if the light node has an "intensity" knob
             if each_light["intensity"]: 
                 intensity_item = QTableWidgetItem(str(each_light["intensity"].getValue()))                
                 intensity_item.setFlags(intensity_item.flags() & ~Qt.ItemIsEditable)
                 self.lights_list_table.setItem(i, 3, intensity_item)
 
     def update_selected_rows(self):
-        """
-        Updates the selected rows and enables/disables the light name input based on the selection.
-        """
-        # Get the selected rows from the table
         self.selected_rows = self.lights_list_table.selectionModel().selectedRows()
-        # Disable the light name input if more than one row is selected
+
+        if not self.selected_rows:
+            return  
+
         if len(self.selected_rows) > 1:
             self.light_name_input.setDisabled(True)
         else:
             self.light_name_input.setDisabled(False)
+
+            light_name = self.lights_list_table.item(self.selected_rows[0].row(), 0).text()
+            light_node = nuke.toNode(light_name)
+
+            if light_node:
+                self.light_name_input.setText(light_name)
+                self.previous_name = light_name  # Store the current name before renaming
+                self.light_type_input.setEnabled("light_type" in light_node.knobs())
+            else:
+                self.light_name_input.clear()
+                self.light_type_input.setDisabled(True)
+
+            self.enable_inputs()
+
         self.update_spinbox_values()
         self.update_slider_values()
-        self.update_buttons()
+        self.update_enable_button()
 
-    def update_buttons(self):
+
+    def update_enable_button(self):
         """
         Updates the enable/disable button text based on the selected light nodes.
         """
@@ -363,78 +364,70 @@ class MainWindow(QWidget):
             light_node["disable"].setValue(not current_state)
 
         # Update button text after toggling
-        self.update_buttons()
+        self.update_enable_button()
 
     def update_spinbox_values(self):
         """
         Updates the light properties input fields with the values from the selected light node.
         """
-        # Check if there are any selected rows
         if not self.selected_rows:
             return
 
-        # Get the name of the selected light node
         light_name = self.lights_list_table.item(self.selected_rows[0].row(), 0).text()
         light_node = nuke.toNode(light_name)
 
-        # Check if the light node exists
         if not light_node:
             nuke.message("Light node not found")
             return
 
-        # Update the light type input field if the knob exists
         if "light_type" in light_node.knobs():
             self.light_type_input.setCurrentText(light_node["light_type"].value())
         
         # Update the color input fields if the knob exists
         if "color" in light_node.knobs():
             color = light_node["color"].value()
-            self.r_input.setValue(str(color[0]))
-            self.g_input.setValue(color[1])
-            self.b_input.setValue(color[2])
+            if type(color) == list:
+                self.r_input.setValue(color[0])
+                self.g_input.setValue(color[1])
+                self.b_input.setValue(color[2])
+            else:
+                self.r_input.setValue(1)
+                self.g_input.setValue(1)
+                self.b_input.setValue(1)
 
-        # Update the intensity input field if the knob exists
         if "intensity" in light_node.knobs():
             self.intensity_input.setValue(light_node["intensity"].value())
 
-        # Update the cone angle input field if the knob exists
         if "cone_angle" in light_node.knobs():
             self.cone_angle_input.setValue(light_node["cone_angle"].value())
 
-        # Update the cone penumbra angle input field if the knob exists
         if "cone_penumbra_angle" in light_node.knobs():
             self.cone_penumbra_angle_input.setValue(light_node["cone_penumbra_angle"].value())
         
-        # Update the cone falloff input field if the knob exists
         if "cone_falloff" in light_node.knobs():
             self.cone_falloff_input.setValue(light_node["cone_falloff"].value())
 
-        # Update the falloff type input field if the knob exists
         if "falloff_type" in light_node.knobs():
             self.falloff_type_input.setCurrentText(light_node["falloff_type"].value())
 
-        # Update the translation input fields if the knob exists
         if "translate" in light_node.knobs():
             translate = light_node["translate"].value()
             self.x_translate_input.setValue(translate[0])
             self.y_translate_input.setValue(translate[1])
             self.z_translate_input.setValue(translate[2])
         
-        # Update the rotation input fields if the knob exists
         if "rotate" in light_node.knobs():
             rotate = light_node["rotate"].value()
             self.x_rotate_input.setValue(rotate[0])
             self.y_rotate_input.setValue(rotate[1])
             self.z_rotate_input.setValue(rotate[2])
 
-        # Update the scale input fields if the knob exists
         if "scale" in light_node.knobs():
             scale = light_node["scale"].value()
             self.x_scale_input.setValue(scale[0])
             self.y_scale_input.setValue(scale[1])
             self.z_scale_input.setValue(scale[2])
 
-        # Update the uniform scale input field if the knob exists
         if "uniform_scale" in light_node.knobs():
             self.uniform_scale_input.setValue(light_node["uniform_scale"].value())
 
@@ -444,44 +437,34 @@ class MainWindow(QWidget):
         self.g_slider_input.setValue(self.g_input.value() * 100)
         self.b_slider_input.setValue(self.b_input.value() * 100)
 
-        # Update the intensity slider value
         self.intensity_slider_input.setValue(self.intensity_input.value())
-
-        # Update the cone angle slider value
         self.cone_angle_slider_input.setValue(self.cone_angle_input.value())
-
-        # Update the cone penumbra angle slider value
         self.cone_penumbra_angle_slider_input.setValue(self.cone_penumbra_angle_input.value())
-
-        # Update the cone falloff slider value
         self.cone_falloff_slider_input.setValue(self.cone_falloff_input.value() )
-
-        # Update the uniform scale slider value
         self.uniform_scale_slider_input.setValue(self.uniform_scale_input.value())
 
     def edit_name(self):
-    
         """
         Edits the name of the selected light node.
         """
-        # Ensure exactly one light is selected
         if len(self.selected_rows) != 1:
             nuke.message("Please select exactly one light to rename.")
             return
 
-        # Get selected row index
         row = self.selected_rows[0].row()
-        
-        # Get current light name from the table
         old_name = self.lights_list_table.item(row, 0).text()
         light_node = nuke.toNode(old_name)
-        
+
         if not light_node:
             nuke.message("Selected light node not found in Nuke.")
             return
 
         # Get the new name from the input field
         new_name = self.light_name_input.text().strip()
+
+        # Prevent renaming if the name has not changed
+        if new_name == old_name:
+            return  # No need to rename
 
         # Validate the new name
         if not new_name:
@@ -503,24 +486,23 @@ class MainWindow(QWidget):
         # Update the name in the table
         self.lights_list_table.item(row, 0).setText(new_name)
 
+        # Store the new name as the previous name
+        self.previous_name = new_name
+
     def color_pick(self):
         """
         Opens the color picker dialog to select a color for the light node.
         """
-        # Check if there are any selected rows
         if not self.selected_rows:
             nuke.message("Please select at least one light to pick a color")
             return
 
-        # Open the color picker dialog
         color = nuke.getColor()
 
         for each_row in self.selected_rows:
-            # Get the name of the light node
             light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
-            # Check if the light node exists
             if not light_node:
                 nuke.message("Light node not found")
                 return
@@ -547,48 +529,38 @@ class MainWindow(QWidget):
         """
         Edits the properties of the selected light nodes.
         """
-        # Check if there are any selected rows
         if not self.selected_rows:
             nuke.message("Please select at least one light to edit properties")
             return
         
-        # Iterate over each selected row
         for each_row in self.selected_rows:
-            # Get the name of the light node
             light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
-            # Check if the light node exists
             if not light_node:
                 nuke.message("Light node not found")
                 return
 
-            # Update the light type if the knob exists
             if "light_type" in light_node.knobs():
                 light_node["light_type"].setValue(self.light_type_input.currentText())
+                self.enable_inputs()
 
-            # Update the intensity if the knob exists
             if "intensity" in light_node.knobs():
                 light_node["intensity"].setValue(self.intensity_input.value())
                 self.lights_list_table.item(each_row.row(), 3).setText(str(self.intensity_input.value()))
             
-            # Update the cone angle if the knob exists
             if "cone_angle" in light_node.knobs():
                 light_node["cone_angle"].setValue(self.cone_angle_input.value())
 
-            # Update the cone penumbra angle if the knob exists
             if "cone_penumbra_angle" in light_node.knobs():
                 light_node["cone_penumbra_angle"].setValue(self.cone_penumbra_angle_input.value())
             
-            # Update the cone falloff if the knob exists
             if "cone_falloff" in light_node.knobs():
                 light_node["cone_falloff"].setValue(self.cone_falloff_input.value())
 
-            # Update the falloff type if the knob exists
             if "falloff_type" in light_node.knobs():
                 light_node["falloff_type"].setValue(self.falloff_type_input.currentText())
             
-            # Update the color if the knob exists
             if "color" in light_node.knobs():
                 light_node["color"].setValue([self.r_input.value(), self.g_input.value(), self.b_input.value()])
                 self.lights_list_table.item(each_row.row(), 2).setText(str([self.r_input.value(), self.g_input.value(), self.b_input.value()]))
@@ -597,43 +569,33 @@ class MainWindow(QWidget):
 
     def edit_properties_from_sliders(self):
         """Edits the properties of the selected light nodes using the sliders."""
-        # Check if there are any selected rows
         if not self.selected_rows:
             nuke.message("Please select at least one light to edit properties")
             return
 
-        # Iterate over each selected row
         for each_row in self.selected_rows:
-            # Get the name of the light node
             light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
-            # Check if the light node exists
             if not light_node:
                 nuke.message("Light node not found")
                 return
 
-            # Update the color if the knob exists
             if "color" in light_node.knobs():
                 light_node["color"].setValue([self.r_slider_input.value() / 100, self.g_slider_input.value() / 100, self.b_slider_input.value() / 100])
 
-            # Update the intensity if the knob exists
             if "intensity" in light_node.knobs():
                 light_node["intensity"].setValue(self.intensity_slider_input.value())
 
-            # Update the cone angle if the knob exists
             if "cone_angle" in light_node.knobs():
                 light_node["cone_angle"].setValue(self.cone_angle_slider_input.value())
 
-            # Update the cone penumbra angle if the knob exists
             if "cone_penumbra_angle" in light_node.knobs():
                 light_node["cone_penumbra_angle"].setValue(self.cone_penumbra_angle_slider_input.value())
 
-            # Update the cone falloff if the knob exists
             if "cone_falloff" in light_node.knobs():
                 light_node["cone_falloff"].setValue(self.cone_falloff_slider_input.value())
 
-            # Update the uniform scale if the knob exists
             if "uniform_scale" in light_node.knobs():
                 light_node["uniform_scale"].setValue(self.uniform_scale_slider_input.value())
         
@@ -643,18 +605,15 @@ class MainWindow(QWidget):
         """
         Edits the translation, rotation, and scale properties of the selected light nodes.
         """
-        # Check if there are any selected rows
         if not self.selected_rows:
             nuke.message("Please select at least one light to edit properties")
             return
         
         # Iterate over each selected row
         for each_row in self.selected_rows:
-            # Get the name of the light node
             light_name = self.lights_list_table.item(each_row.row(), 0).text()
             light_node = nuke.toNode(light_name)
 
-            # Check if the light node exists
             if not light_node:
                 nuke.message("Light node not found")
                 return
@@ -664,6 +623,61 @@ class MainWindow(QWidget):
             light_node["rotate"].setValue([self.x_rotate_input.value(), self.y_rotate_input.value(), self.z_rotate_input.value()])
             light_node["scaling"].setValue([self.x_scale_input.value(), self.y_scale_input.value(), self.z_scale_input.value()])
             light_node["uniform_scale"].setValue(self.uniform_scale_input.value())
+
+    def enable_inputs(self): 
+        """
+        Enables and disables input fields based on the selected light node and its type.
+        """
+        if not self.selected_rows:
+            nuke.message("Please select at least one light to edit properties")
+            return
+        
+        # Get the first selected light node (since this only applies to single selection)
+        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 0).text()
+        light_node = nuke.toNode(light_name)
+
+        if not light_node:
+            nuke.message("Light node not found")
+            return
+
+        # Enable all controls initially
+        self.cone_angle_input.setEnabled(True)
+        self.cone_angle_slider_input.setEnabled(True)
+        self.cone_penumbra_angle_input.setEnabled(True)
+        self.cone_penumbra_angle_slider_input.setEnabled(True)
+        self.cone_falloff_input.setEnabled(True)
+        self.cone_falloff_slider_input.setEnabled(True)
+        self.falloff_type_input.setEnabled(True)
+
+        # Disable controls based on light type
+        if "light_type" in light_node.knobs():
+            light_type = light_node["light_type"].value()
+            # If the light type is "point", disable few controls
+            if light_type == "point":
+                self.cone_angle_input.setDisabled(True)
+                self.cone_angle_slider_input.setDisabled(True)
+                self.cone_penumbra_angle_input.setDisabled(True)
+                self.cone_penumbra_angle_slider_input.setDisabled(True)
+                self.cone_falloff_input.setDisabled(True)
+                self.cone_falloff_slider_input.setDisabled(True)
+            # If the light type is "directional", disable few controls
+            elif light_type == "directional":
+                self.cone_angle_input.setDisabled(True)
+                self.cone_angle_slider_input.setDisabled(True)
+                self.cone_penumbra_angle_input.setDisabled(True)
+                self.cone_penumbra_angle_slider_input.setDisabled(True)
+                self.cone_falloff_input.setDisabled(True)
+                self.cone_falloff_slider_input.setDisabled(True)
+                self.falloff_type_input.setDisabled(True)
+        else:
+            # If "light_type" doesn't exist, disable these controls
+            self.cone_angle_input.setDisabled(True)
+            self.cone_angle_slider_input.setDisabled(True)
+            self.cone_penumbra_angle_input.setDisabled(True)
+            self.cone_penumbra_angle_slider_input.setDisabled(True)
+            self.cone_falloff_input.setDisabled(True)
+            self.cone_falloff_slider_input.setDisabled(True)
+            self.falloff_type_input.setDisabled(False)
 
     def reset_to_default(self):
         """
@@ -680,32 +694,14 @@ class MainWindow(QWidget):
             if not light_node:
                 nuke.message(f"Light node '{light_name}' not found.")
                 return
+            # Resetting Knobs to default values
+            light_node.resetKnobsToDefault()
 
-            for knob_name, knob in light_node.knobs().items():
-                if knob_name in ["name", "disable"]:
-                    continue  # Skip name and disable knobs
-
-                try:
-                    if hasattr(knob, "defaultValue"):
-                        default_value = knob.defaultValue()
-                        
-                        # Handle different knob types properly
-                        if isinstance(default_value, (int, float, str)):  
-                            light_node[knob_name].setValue(default_value)
-
-                        elif isinstance(default_value, (tuple, list)):  
-                            light_node[knob_name].setValue(list(default_value))  # Convert tuples to lists if necessary
-
-                        elif isinstance(default_value, bool):
-                            light_node[knob_name].setValue(bool(default_value))
-
-                        else:
-                            print(f"Skipping {knob_name}: Unsupported default value type")
-
-                except Exception as e:
-                    print(f"Error resetting {knob_name} in {light_name}: {e}")
-
-        # Refresh UI fields and table after reset
+        if self.selected_rows:
+            # Clearing the stylesheet from previous selection
+            self.color_input.setStyleSheet("")
+            
+        self.populate_table()
         self.update_selected_rows()
 
 def light_editor():
@@ -714,6 +710,7 @@ def light_editor():
     """
     global window
     window = MainWindow()
+    window.setMinimumSize(900, 450)
     window.show()
         
 light_editor()
