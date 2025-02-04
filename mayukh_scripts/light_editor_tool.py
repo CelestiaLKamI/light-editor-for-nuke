@@ -709,5 +709,3 @@ def light_editor():
     window = MainWindow()
     window.setMinimumSize(900, 450)
     window.show()
-        
-light_editor()

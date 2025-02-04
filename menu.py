@@ -6,5 +6,5 @@ print("Loading menu.py...")
 menu = nuke.menu("Nuke")
 my_scripts = menu.addMenu("Mayukh Scripts Test")
 
-shot_builder_tool = my_scripts.addMenu("Light Editor")
-shot_builder_tool.addCommand("Light Editor", light_editor)
+light_editor_tool = my_scripts.addMenu("Light Editor")
+light_editor_tool.addCommand("Light Editor", light_editor)
