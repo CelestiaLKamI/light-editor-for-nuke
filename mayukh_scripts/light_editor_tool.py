@@ -606,6 +606,8 @@ class MainWindow(QWidget):
             self.uniform_scale_input.setValue(light_node["uniform_scale"].value())
             self.uniform_scale_slider_input.setValue(light_node["uniform_scale"].value() * 100)
 
+        self.color_input.setStyleSheet("")
+
         # **Unblock signals after updating values**
         for widget in inputs:
             widget.blockSignals(False)
