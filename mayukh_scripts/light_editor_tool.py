@@ -32,8 +32,8 @@ class MainWindow(QWidget):
         self.lights_list_table.setHorizontalHeaderLabels(["Name", "Light Type", "Color", "Intensity"])
         self.lights_list_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.lights_list_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.lights_list_table.selectionModel().selectionChanged.connect(self.update_selected_rows)
-        
+        self.lights_list_table.selectionModel().selectionChanged.connect(self.update_selection)
+
         # Create light control buttons
         self.enable_light_button = QPushButton("Disable")
         self.enable_light_button.clicked.connect(self.enable_disable)
@@ -117,69 +117,46 @@ class MainWindow(QWidget):
         self.light_name_input.textChanged.connect(self.edit_name)
         self.light_type_input = QComboBox()
         self.light_type_input.addItems(["point", "directional", "spot"])
-        self.light_type_input.currentIndexChanged.connect(self.edit_properties_from_spinbox)
         self.color_input = QPushButton("Color")
         self.color_input.setMaximumWidth(50)
         self.color_input.clicked.connect(self.color_pick)
         self.r_input = QDoubleSpinBox()
         self.r_input.setMaximumWidth(50)
-        self.r_input.setDecimals(10)
         self.r_input.setRange(0, 1)
-        self.r_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.r_slider_input = QSlider(Qt.Horizontal)
         self.r_slider_input.setRange(1, 100)
-        self.r_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.g_input = QDoubleSpinBox()
         self.g_input.setMaximumWidth(50)
-        self.g_input.setDecimals(10)
         self.g_input.setRange(0, 1)
-        self.g_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.g_slider_input = QSlider(Qt.Horizontal)
         self.g_slider_input.setRange(1, 100)
-        self.g_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.b_input = QDoubleSpinBox()
         self.b_input.setMaximumWidth(50)
-        self.b_input.setDecimals(10)
         self.b_input.setRange(0, 1)
-        self.b_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.b_slider_input = QSlider(Qt.Horizontal)
         self.b_slider_input.setRange(1, 100)
-        self.b_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
         self.intensity_input = QDoubleSpinBox()
         self.intensity_input.setMaximumWidth(50)
-        self.intensity_input.setDecimals(10)
         self.intensity_input.setRange(0, 50)
-        self.intensity_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.intensity_slider_input = QSlider(Qt.Horizontal)
-        self.intensity_slider_input.setRange(0, 50) #(0, 50)
-        self.intensity_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
+        self.intensity_slider_input.setRange(0, 5000) #(0, 50)
         self.cone_angle_input = QDoubleSpinBox()
         self.cone_angle_input.setMaximumWidth(50)
-        self.cone_angle_input.setDecimals(10)
         self.cone_angle_input.setRange(0, 180)
-        self.cone_angle_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.cone_angle_slider_input = QSlider(Qt.Horizontal)
-        self.cone_angle_slider_input.setRange(0, 180)
-        self.cone_angle_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
+        self.cone_angle_slider_input.setRange(0, 18000)
         self.cone_penumbra_angle_input = QDoubleSpinBox()
         self.cone_penumbra_angle_input.setMaximumWidth(50)
-        self.cone_penumbra_angle_input.setDecimals(10)
         self.cone_penumbra_angle_input.setRange(-60, 60)
-        self.cone_penumbra_angle_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.cone_penumbra_angle_slider_input = QSlider(Qt.Horizontal)
-        self.cone_penumbra_angle_slider_input.setRange(-60, 60)
-        self.cone_penumbra_angle_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
+        self.cone_penumbra_angle_slider_input.setRange(-6000, 6000)
         self.cone_falloff_input = QDoubleSpinBox()
         self.cone_falloff_input.setMaximumWidth(50)
-        self.cone_falloff_input.setDecimals(10)
         self.cone_falloff_input.setRange(0, 1000)
-        self.cone_falloff_input.valueChanged.connect(self.edit_properties_from_spinbox)
         self.cone_falloff_slider_input = QSlider(Qt.Horizontal)
-        self.cone_falloff_slider_input.setRange(0, 1000)
-        self.cone_falloff_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
+        self.cone_falloff_slider_input.setRange(0, 100000)
         self.falloff_type_input = QComboBox()
-        self.falloff_type_input.addItems(["None", "Linear", "Quadratic", "Cubic"])
-        self.falloff_type_input.currentIndexChanged.connect(self.edit_properties_from_spinbox)
+        self.falloff_type_input.addItems(["No Falloff", "Linear", "Quadratic", "Cubic"])
 
         # Add input fields to the grid layout
         gbox1.addWidget(self.light_name_input, 0, 1, 1, 4)
@@ -203,57 +180,36 @@ class MainWindow(QWidget):
 
         # Create input fields for transformation properties
         self.x_translate_input = QDoubleSpinBox()
-        self.x_translate_input.setDecimals(10)
         self.x_translate_input.setMaximum(float('inf'))  # No limit before the decimal
         self.x_translate_input.setMinimum(float('-inf'))
-        self.x_translate_input.valueChanged.connect(self.edit_translations)
         self.y_translate_input = QDoubleSpinBox()
-        self.y_translate_input.setDecimals(10)
         self.y_translate_input.setMaximum(float('inf'))
         self.y_translate_input.setMinimum(float('-inf'))
-        self.y_translate_input.valueChanged.connect(self.edit_translations)
         self.z_translate_input = QDoubleSpinBox()
-        self.z_translate_input.setDecimals(10)
         self.z_translate_input.setMaximum(float('inf'))
         self.z_translate_input.setMinimum(float('-inf'))
-        self.z_translate_input.valueChanged.connect(self.edit_translations)
         self.x_rotate_input = QDoubleSpinBox()
-        self.x_rotate_input.setDecimals(10)
         self.x_rotate_input.setMaximum(float('inf'))
         self.x_rotate_input.setMinimum(float('-inf'))
-        self.x_rotate_input.valueChanged.connect(self.edit_translations)
         self.y_rotate_input = QDoubleSpinBox()
-        self.y_rotate_input.setDecimals(10)
         self.y_rotate_input.setMaximum(float('inf'))
         self.y_rotate_input.setMinimum(float('-inf'))
-        self.y_rotate_input.valueChanged.connect(self.edit_translations)
         self.z_rotate_input = QDoubleSpinBox()
-        self.z_rotate_input.setDecimals(10)
         self.z_rotate_input.setMaximum(float('inf'))
         self.z_rotate_input.setMinimum(float('-inf'))
-        self.z_rotate_input.valueChanged.connect(self.edit_translations)
         self.x_scale_input = QDoubleSpinBox()
-        self.x_scale_input.setDecimals(10)
         self.x_scale_input.setMaximum(float('inf'))
         self.x_scale_input.setMinimum(float('-inf'))
-        self.x_scale_input.valueChanged.connect(self.edit_translations)
         self.y_scale_input = QDoubleSpinBox()
-        self.y_scale_input.setDecimals(10)
         self.y_scale_input.setMaximum(float('inf'))
         self.y_scale_input.setMinimum(float('-inf'))
-        self.y_scale_input.valueChanged.connect(self.edit_translations)
         self.z_scale_input = QDoubleSpinBox()
-        self.z_scale_input.setDecimals(10)
         self.z_scale_input.setMaximum(float('inf'))
         self.z_scale_input.setMinimum(float('-inf'))
-        self.z_scale_input.valueChanged.connect(self.edit_translations)
         self.uniform_scale_input = QDoubleSpinBox()
-        self.uniform_scale_input.setDecimals(10)
         self.uniform_scale_input.setRange(0.01, 10)
-        self.uniform_scale_input.valueChanged.connect(self.edit_translations)
         self.uniform_scale_slider_input = QSlider(Qt.Horizontal)
-        self.uniform_scale_slider_input.setRange(0.01, 10)
-        self.uniform_scale_slider_input.valueChanged.connect(self.edit_properties_from_sliders)
+        self.uniform_scale_slider_input.setRange(100, 1000)
 
         # Add transformation input fields to the grid layout
         gbox2.addWidget(self.x_translate_input, 0, 2)
@@ -320,20 +276,15 @@ class MainWindow(QWidget):
                 intensity_item.setFlags(intensity_item.flags() & ~Qt.ItemIsEditable)
                 self.lights_list_table.setItem(i, 3, intensity_item)
 
-    def update_selected_rows(self):
+    def update_selection(self):
         self.selected_rows = self.lights_list_table.selectionModel().selectedRows()
 
-        if not self.selected_rows:
-            return  
-
-        if len(self.selected_rows) > 1:
+        if len(self.selected_rows) != 1:
             self.light_name_input.setDisabled(True)
         else:
             self.light_name_input.setDisabled(False)
-
             light_name = self.lights_list_table.item(self.selected_rows[0].row(), 0).text()
             light_node = nuke.toNode(light_name)
-
             if light_node:
                 self.light_name_input.setText(light_name)
                 self.previous_name = light_name  # Store the current name before renaming
@@ -342,13 +293,10 @@ class MainWindow(QWidget):
                 self.light_name_input.clear()
                 self.light_type_input.setDisabled(True)
 
+            self.update_enable_button()
+            self.update_values()
+            self.populate_table()
             self.enable_inputs()
-
-        self.update_spinbox_values()
-        self.update_slider_values()
-        self.update_enable_button()
-
-
 
     def update_enable_button(self):
         """
@@ -375,7 +323,7 @@ class MainWindow(QWidget):
             return
 
         self.enable_light_button.setText("Enable" if light_node["disable"].value() else "Disable")
-        
+
     def enable_disable(self):
         """
         Toggles the enable/disable state of the selected light nodes.
@@ -398,264 +346,6 @@ class MainWindow(QWidget):
 
         # Update button text after toggling
         self.update_enable_button()
-
-    def update_spinbox_values(self):
-        """
-        Updates the light properties input fields with the values from the selected light node.
-        """
-        if not self.selected_rows:
-            return
-
-        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 0).text()
-        light_node = nuke.toNode(light_name)
-
-        if not light_node:
-            nuke.message("Light node not found")
-            return
-
-        if "light_type" in light_node.knobs():
-            self.light_type_input.setCurrentText(light_node["light_type"].value())
-        
-        # Update the color input fields if the knob exists
-        if "color" in light_node.knobs():
-            color = light_node["color"].value()
-            if type(color) == list:
-                self.r_input.setValue(color[0])
-                self.g_input.setValue(color[1])
-                self.b_input.setValue(color[2])
-            else:
-                self.r_input.setValue(1)
-                self.g_input.setValue(1)
-                self.b_input.setValue(1)
-
-        if "intensity" in light_node.knobs():
-            self.intensity_input.setValue(light_node["intensity"].value())
-
-        if "cone_angle" in light_node.knobs():
-            self.cone_angle_input.setValue(light_node["cone_angle"].value())
-
-        if "cone_penumbra_angle" in light_node.knobs():
-            self.cone_penumbra_angle_input.setValue(light_node["cone_penumbra_angle"].value())
-        
-        if "cone_falloff" in light_node.knobs():
-            self.cone_falloff_input.setValue(light_node["cone_falloff"].value())
-
-        if "falloff_type" in light_node.knobs():
-            self.falloff_type_input.setCurrentText(light_node["falloff_type"].value())
-
-        if "translate" in light_node.knobs():
-            translate = light_node["translate"].value()
-            self.x_translate_input.setValue(translate[0])
-            self.y_translate_input.setValue(translate[1])
-            self.z_translate_input.setValue(translate[2])
-        
-        if "rotate" in light_node.knobs():
-            rotate = light_node["rotate"].value()
-            self.x_rotate_input.setValue(rotate[0])
-            self.y_rotate_input.setValue(rotate[1])
-            self.z_rotate_input.setValue(rotate[2])
-
-        if "scaling" in light_node.knobs():
-            scale = light_node["scaling"].value()
-            self.x_scale_input.setValue(scale[0])
-            self.y_scale_input.setValue(scale[1])
-            self.z_scale_input.setValue(scale[2])
-
-        if "uniform_scale" in light_node.knobs():
-            self.uniform_scale_input.setValue(light_node["uniform_scale"].value())
-
-    def update_slider_values(self):
-        # Update the color slider values
-        self.r_slider_input.setValue(self.r_input.value() * 100)
-        self.g_slider_input.setValue(self.g_input.value() * 100)
-        self.b_slider_input.setValue(self.b_input.value() * 100)
-
-        self.intensity_slider_input.setValue(self.intensity_input.value())
-        self.cone_angle_slider_input.setValue(self.cone_angle_input.value())
-        self.cone_penumbra_angle_slider_input.setValue(self.cone_penumbra_angle_input.value())
-        self.cone_falloff_slider_input.setValue(self.cone_falloff_input.value() )
-        self.uniform_scale_slider_input.setValue(self.uniform_scale_input.value())
-
-    def edit_name(self):
-        """
-        Edits the name of the selected light node.
-        """
-        if len(self.selected_rows) != 1:
-            nuke.message("Please select exactly one light to rename.")
-            return
-
-        row = self.selected_rows[0].row()
-        old_name = self.lights_list_table.item(row, 0).text()
-        light_node = nuke.toNode(old_name)
-
-        if not light_node:
-            nuke.message("Selected light node not found in Nuke.")
-            return
-
-        # Get the new name from the input field
-        new_name = self.light_name_input.text().strip()
-
-        # Prevent renaming if the name has not changed
-        if new_name == old_name:
-            return  # No need to rename
-
-        # Validate the new name
-        if not new_name:
-            nuke.message("Please enter a valid light name.")
-            return
-
-        if new_name[0].isdigit():
-            nuke.message("Light name cannot start with a number.")
-            return
-
-        # Check if the new name already exists in Nuke
-        if nuke.toNode(new_name):
-            nuke.message("A node with this name already exists. Choose a different name.")
-            return
-
-        # Apply the new name to the light node
-        light_node["name"].setValue(new_name)
-
-        # Update the name in the table
-        self.lights_list_table.item(row, 0).setText(new_name)
-
-        # Store the new name as the previous name
-        self.previous_name = new_name
-
-    def color_pick(self):
-        """
-        Opens the color picker dialog to select a color for the light node.
-        """
-        if not self.selected_rows:
-            nuke.message("Please select at least one light to pick a color")
-            return
-
-        color = nuke.getColor()
-
-        for each_row in self.selected_rows:
-            light_name = self.lights_list_table.item(each_row.row(), 0).text()
-            light_node = nuke.toNode(light_name)
-
-            if not light_node:
-                nuke.message("Light node not found")
-                return
-
-            if color:
-                print(f"Raw color value: {color}")  # Debugging raw color value
-                
-                # Extract RGBA components using correct bitwise operations
-                r = (color >> 24) & 255 # Alpha
-                g = (color >> 16) & 255 # Red
-                b = (color >> 8) & 255 # Green
-                a = (color >> 0) & 255 # Blue
-                color_normalized = [r, g, b, a]
-                # Update GUI input fields with selected color
-                self.r_input.setValue(r)
-                self.g_input.setValue(g)
-                self.b_input.setValue(b)
-
-        # Update the color display with the last selected color
-        if color:
-            self.color_input.setStyleSheet(f"background-color: rgb({r}, {g}, {b});")
-
-    def edit_properties_from_spinbox(self):
-        """
-        Edits the properties of the selected light nodes.
-        """
-        if not self.selected_rows:
-            nuke.message("Please select at least one light to edit properties")
-            return
-        
-        for each_row in self.selected_rows:
-            light_name = self.lights_list_table.item(each_row.row(), 0).text()
-            light_node = nuke.toNode(light_name)
-
-            if not light_node:
-                nuke.message("Light node not found")
-                return
-
-            if "light_type" in light_node.knobs():
-                light_node["light_type"].setValue(self.light_type_input.currentText())
-                self.enable_inputs()
-
-            if "intensity" in light_node.knobs():
-                light_node["intensity"].setValue(self.intensity_input.value())
-                self.lights_list_table.item(each_row.row(), 3).setText(str(self.intensity_input.value()))
-            
-            if "cone_angle" in light_node.knobs():
-                light_node["cone_angle"].setValue(self.cone_angle_input.value())
-
-            if "cone_penumbra_angle" in light_node.knobs():
-                light_node["cone_penumbra_angle"].setValue(self.cone_penumbra_angle_input.value())
-            
-            if "cone_falloff" in light_node.knobs():
-                light_node["cone_falloff"].setValue(self.cone_falloff_input.value())
-
-            if "falloff_type" in light_node.knobs():
-                light_node["falloff_type"].setValue(self.falloff_type_input.currentText())
-            
-            if "color" in light_node.knobs():
-                light_node["color"].setValue([self.r_input.value(), self.g_input.value(), self.b_input.value()])
-                self.lights_list_table.item(each_row.row(), 2).setText(str([self.r_input.value(), self.g_input.value(), self.b_input.value()]))
-
-        self.update_slider_values()
-
-    def edit_properties_from_sliders(self):
-        """Edits the properties of the selected light nodes using the sliders."""
-        if not self.selected_rows:
-            nuke.message("Please select at least one light to edit properties")
-            return
-
-        for each_row in self.selected_rows:
-            light_name = self.lights_list_table.item(each_row.row(), 0).text()
-            light_node = nuke.toNode(light_name)
-
-            if not light_node:
-                nuke.message("Light node not found")
-                return
-
-            if "color" in light_node.knobs():
-                light_node["color"].setValue([self.r_slider_input.value() / 100, self.g_slider_input.value() / 100, self.b_slider_input.value() / 100])
-
-            if "intensity" in light_node.knobs():
-                light_node["intensity"].setValue(self.intensity_slider_input.value())
-
-            if "cone_angle" in light_node.knobs():
-                light_node["cone_angle"].setValue(self.cone_angle_slider_input.value())
-
-            if "cone_penumbra_angle" in light_node.knobs():
-                light_node["cone_penumbra_angle"].setValue(self.cone_penumbra_angle_slider_input.value())
-
-            if "cone_falloff" in light_node.knobs():
-                light_node["cone_falloff"].setValue(self.cone_falloff_slider_input.value())
-
-            if "uniform_scale" in light_node.knobs():
-                light_node["uniform_scale"].setValue(self.uniform_scale_slider_input.value())
-        
-        self.update_spinbox_values()
-
-    def edit_translations(self):
-        """
-        Edits the translation, rotation, and scale properties of the selected light nodes.
-        """
-        if not self.selected_rows:
-            nuke.message("Please select at least one light to edit properties")
-            return
-        
-        # Iterate over each selected row
-        for each_row in self.selected_rows:
-            light_name = self.lights_list_table.item(each_row.row(), 0).text()
-            light_node = nuke.toNode(light_name)
-
-            if not light_node:
-                nuke.message("Light node not found")
-                return
-
-            # Update the translation, rotation, and scale properties
-            light_node["translate"].setValue([self.x_translate_input.value(), self.y_translate_input.value(), self.z_translate_input.value()])
-            light_node["rotate"].setValue([self.x_rotate_input.value(), self.y_rotate_input.value(), self.z_rotate_input.value()])
-            light_node["scaling"].setValue([self.x_scale_input.value(), self.y_scale_input.value(), self.z_scale_input.value()])
-            light_node["uniform_scale"].setValue(self.uniform_scale_input.value())
 
     def enable_inputs(self): 
         """
@@ -712,6 +402,88 @@ class MainWindow(QWidget):
             self.cone_falloff_slider_input.setDisabled(True)
             self.falloff_type_input.setDisabled(False)
 
+    def edit_name(self):
+        """
+        Edits the name of the selected light node.
+        """
+        if len(self.selected_rows) != 1:
+            nuke.message("Please select exactly one light to rename.")
+            return
+
+        row = self.selected_rows[0].row()
+        old_name = self.lights_list_table.item(row, 0).text()
+        light_node = nuke.toNode(old_name)
+
+        if not light_node:
+            nuke.message("Selected light node not found in Nuke.")
+            return
+
+        # Get the new name from the input field
+        new_name = self.light_name_input.text().strip()
+
+        # Prevent renaming if the name has not changed
+        if new_name == old_name:
+            return  # No need to rename
+
+        # Validate the new name
+        if not new_name:
+            nuke.message("Please enter a valid light name.")
+            return
+
+        if new_name[0].isdigit():
+            nuke.message("Light name cannot start with a number.")
+            return
+
+        # Check if the new name already exists in Nuke
+        if nuke.toNode(new_name):
+            nuke.message("A node with this name already exists. Choose a different name.")
+            return
+
+        # Apply the new name to the light node
+        light_node["name"].setValue(new_name)
+
+        # Update the name in the table
+        self.lights_list_table.item(row, 0).setText(new_name)
+
+        # Store the new name as the previous name
+        self.previous_name = new_name
+    
+    def color_pick(self):
+        """
+        Opens the color picker dialog to select a color for the light node.
+        """
+        if not self.selected_rows:
+            nuke.message("Please select at least one light to pick a color")
+            return
+
+        color = nuke.getColor()
+
+        for each_row in self.selected_rows:
+            light_name = self.lights_list_table.item(each_row.row(), 0).text()
+            light_node = nuke.toNode(light_name)
+
+            if not light_node:
+                nuke.message("Light node not found")
+                return
+
+            if color:
+                print(f"Raw color value: {color}")  # Debugging raw color value
+                
+                # Extract RGBA components using correct bitwise operations
+                r = (color >> 24) & 255 # Alpha
+                g = (color >> 16) & 255 # Red
+                b = (color >> 8) & 255 # Green
+                a = (color >> 0) & 255 # Blue
+                color_normalized = [r, g, b, a]
+                # Update GUI input fields with selected color
+                self.r_input.setValue(r)
+                self.g_input.setValue(g)
+                self.b_input.setValue(b)
+
+        # Update the color display with the last selected color
+        if color:
+            self.color_input.setStyleSheet(f"background-color: rgb({r}, {g}, {b});")
+
     def reset_to_default(self):
         """
         Resets the selected light nodes to their default properties.
@@ -734,9 +506,283 @@ class MainWindow(QWidget):
         if self.selected_rows:
             # Clearing the stylesheet from previous selection
             self.color_input.setStyleSheet("")
-            
+        
         self.populate_table()
-        self.update_selected_rows()
+
+    def update_values(self):
+        """
+        Updates the input fields with the values from the selected light node.
+        """
+        if not self.selected_rows:
+            return
+
+        light_name = self.lights_list_table.item(self.selected_rows[0].row(), 0).text()
+        light_node = nuke.toNode(light_name)
+
+        if not light_node:
+            return
+
+        # **Block signals while updating values to prevent unintended triggers**
+        inputs = [
+            self.r_input, self.g_input, self.b_input,
+            self.r_slider_input, self.g_slider_input, self.b_slider_input,
+            self.intensity_input, self.intensity_slider_input, 
+            self.cone_angle_input, self.cone_angle_slider_input, 
+            self.cone_penumbra_angle_input, self.cone_penumbra_angle_slider_input, 
+            self.cone_falloff_input, self.cone_falloff_slider_input, 
+            self.falloff_type_input, self.x_translate_input, 
+            self.y_translate_input, self.z_translate_input, 
+            self.x_rotate_input, self.y_rotate_input, self.z_rotate_input, 
+            self.x_scale_input, self.y_scale_input, self.z_scale_input, 
+            self.uniform_scale_input, self.uniform_scale_slider_input
+        ]
+
+        for widget in inputs:
+            widget.blockSignals(True)
+
+        # **Keep the Light Type Unchanged**
+        if "light_type" in light_node.knobs():
+            current_light_type = light_node["light_type"].value()  # Store previous type
+            self.light_type_input.setCurrentText(current_light_type)  # Keep it unchanged
+
+        # Update the color input fields if the knob exists
+        if "color" in light_node.knobs():
+            self.old_color = light_node["color"].value()
+            color = light_node["color"].value()
+            if type(color) == list:
+                self.r_input.setValue(color[0])
+                self.r_slider_input.setValue(color[0] * 100)
+                self.g_input.setValue(color[1])
+                self.g_slider_input.setValue(color[1] * 100)
+                self.b_input.setValue(color[2])
+                self.b_slider_input.setValue(color[2] * 100)
+            else:
+                self.r_input.setValue(1)
+                self.r_slider_input.setValue(1 * 100)
+                self.g_input.setValue(1)
+                self.g_slider_input.setValue(1 * 100)
+                self.b_input.setValue(1)
+                self.b_slider_input.setValue(1 * 100)
+
+        # **Update only the knobs that exist in the node**
+        if "intensity" in light_node.knobs():
+            self.intensity_input.setValue(light_node["intensity"].value())
+            self.intensity_slider_input.setValue(light_node["intensity"].value() * 100)
+
+        if "cone_angle" in light_node.knobs():
+            self.cone_angle_input.setValue(light_node["cone_angle"].value())
+            self.cone_angle_slider_input.setValue(light_node["cone_angle"].value() * 100)
+
+        if "cone_penumbra_angle" in light_node.knobs():
+            self.cone_penumbra_angle_input.setValue(light_node["cone_penumbra_angle"].value())
+            self.cone_penumbra_angle_slider_input.setValue(light_node["cone_penumbra_angle"].value() * 100)
+
+        if "cone_falloff" in light_node.knobs():
+            self.cone_falloff_input.setValue(light_node["cone_falloff"].value())
+            self.cone_falloff_slider_input.setValue(light_node["cone_falloff"].value() * 100)
+
+        if "falloff_type" in light_node.knobs():
+            self.falloff_type_input.setCurrentText(light_node["falloff_type"].value())
+
+        if "translate" in light_node.knobs():
+            translate = light_node["translate"].value()
+            self.x_translate_input.setValue(translate[0])
+            self.y_translate_input.setValue(translate[1])
+            self.z_translate_input.setValue(translate[2])
+
+        if "rotate" in light_node.knobs():
+            rotate = light_node["rotate"].value()
+            self.x_rotate_input.setValue(rotate[0])
+            self.y_rotate_input.setValue(rotate[1])
+            self.z_rotate_input.setValue(rotate[2])
+
+        if "scaling" in light_node.knobs():
+            scale = light_node["scaling"].value()
+            self.x_scale_input.setValue(scale[0])
+            self.y_scale_input.setValue(scale[1])
+            self.z_scale_input.setValue(scale[2])
+
+        if "uniform_scale" in light_node.knobs():
+            self.uniform_scale_input.setValue(light_node["uniform_scale"].value())
+            self.uniform_scale_slider_input.setValue(light_node["uniform_scale"].value() * 100)
+
+        # **Unblock signals after updating values**
+        for widget in inputs:
+            widget.blockSignals(False)
+
+        # **Reconnect signals to allow user edits**
+        self.slot_connect()
+
+    def slot_connect(self):
+        """
+        Connects UI elements to the edit_properties function.
+        """
+        # Light Type
+        self.light_type_input.currentIndexChanged.connect(self.edit_properties)
+        self.light_type_input.currentTextChanged.connect(self.enable_inputs)
+
+        # Color Inputs
+        self.r_input.valueChanged.connect(self.edit_properties)
+        self.g_input.valueChanged.connect(self.edit_properties)
+        self.b_input.valueChanged.connect(self.edit_properties)
+        self.r_slider_input.valueChanged.connect(self.edit_properties)
+        self.g_slider_input.valueChanged.connect(self.edit_properties)
+        self.b_slider_input.valueChanged.connect(self.edit_properties)
+
+        # Intensity
+        self.intensity_input.valueChanged.connect(self.edit_properties)
+        self.intensity_slider_input.valueChanged.connect(self.edit_properties)
+
+        # Cone Angle
+        self.cone_angle_input.valueChanged.connect(self.edit_properties)
+        self.cone_angle_slider_input.valueChanged.connect(self.edit_properties)
+
+        # Cone Penumbra Angle
+        self.cone_penumbra_angle_input.valueChanged.connect(self.edit_properties)
+        self.cone_penumbra_angle_slider_input.valueChanged.connect(self.edit_properties)
+
+        # Cone Falloff
+        self.cone_falloff_input.valueChanged.connect(self.edit_properties)
+        self.cone_falloff_slider_input.valueChanged.connect(self.edit_properties)
+
+        # Falloff Type
+        self.falloff_type_input.currentIndexChanged.connect(self.edit_properties)
+
+        # Translate
+        self.x_translate_input.valueChanged.connect(self.edit_properties)
+        self.y_translate_input.valueChanged.connect(self.edit_properties)
+        self.z_translate_input.valueChanged.connect(self.edit_properties)
+
+        # Rotate
+        self.x_rotate_input.valueChanged.connect(self.edit_properties)
+        self.y_rotate_input.valueChanged.connect(self.edit_properties)
+        self.z_rotate_input.valueChanged.connect(self.edit_properties)
+
+        # Scaling
+        self.x_scale_input.valueChanged.connect(self.edit_properties)
+        self.y_scale_input.valueChanged.connect(self.edit_properties)
+        self.z_scale_input.valueChanged.connect(self.edit_properties)
+
+        # Uniform Scale
+        self.uniform_scale_input.valueChanged.connect(self.edit_properties)
+        self.uniform_scale_slider_input.valueChanged.connect(self.edit_properties)
+
+
+    def edit_properties(self):
+        """
+        Edits the properties of the selected light nodes when a user changes values.
+        Synchronizes spinboxes, sliders, color inputs, and light type.
+        """
+        if not self.selected_rows:
+            return
+
+        for each_row in self.selected_rows:
+            light_name = self.lights_list_table.item(each_row.row(), 0).text()
+            light_node = nuke.toNode(light_name)
+
+            if not light_node:
+                continue
+
+            sender = self.sender()  # Identify which widget triggered the edit
+
+            # **Light Type (Only Update If Changed By User)**
+            if sender == self.light_type_input:
+                light_node["light_type"].setValue(self.light_type_input.currentText())
+
+            # **Synchronize Color**
+            if sender in [self.r_input, self.g_input, self.b_input]:
+                new_color = [
+                    self.r_input.value(),
+                    self.g_input.value(),
+                    self.b_input.value()
+                ]
+                light_node["color"].setValue(new_color)
+
+                # Update sliders
+                self.r_slider_input.setValue(self.r_input.value() * 100)
+                self.g_slider_input.setValue(self.g_input.value() * 100)
+                self.b_slider_input.setValue(self.b_input.value() * 100)
+
+            if sender in [self.r_slider_input, self.g_slider_input, self.b_slider_input]:
+                new_color = [
+                    self.r_slider_input.value() / 100,
+                    self.g_slider_input.value() / 100,
+                    self.b_slider_input.value() / 100
+                ]
+                light_node["color"].setValue(new_color)
+
+                # Update spinboxes
+                self.r_input.setValue(self.r_slider_input.value() / 100)
+                self.g_input.setValue(self.g_slider_input.value() / 100)
+                self.b_input.setValue(self.b_slider_input.value() / 100)
+            
+            # **Synchronize Intensity**
+            if sender == self.intensity_slider_input:
+                self.intensity_input.setValue(self.intensity_slider_input.value() / 100)
+            elif sender == self.intensity_input:
+                self.intensity_slider_input.setValue(self.intensity_input.value() * 100)
+                light_node["intensity"].setValue(self.intensity_input.value())
+
+            # **Synchronize Cone Angle**
+            if sender == self.cone_angle_slider_input:
+                self.cone_angle_input.setValue(self.cone_angle_slider_input.value() / 100)
+            elif sender == self.cone_angle_input:
+                self.cone_angle_slider_input.setValue(self.cone_angle_input.value() * 100)
+                light_node["cone_angle"].setValue(self.cone_angle_input.value())
+
+            # **Synchronize Cone Penumbra Angle**
+            if sender == self.cone_penumbra_angle_slider_input:
+                self.cone_penumbra_angle_input.setValue(self.cone_penumbra_angle_slider_input.value() / 100)
+            elif sender == self.cone_penumbra_angle_input:
+                self.cone_penumbra_angle_slider_input.setValue(self.cone_penumbra_angle_input.value() * 100)
+                light_node["cone_penumbra_angle"].setValue(self.cone_penumbra_angle_input.value())
+
+            # **Synchronize Cone Falloff**
+            if sender == self.cone_falloff_slider_input:
+                self.cone_falloff_input.setValue(self.cone_falloff_slider_input.value() / 100)
+            elif sender == self.cone_falloff_input:
+                self.cone_falloff_slider_input.setValue(self.cone_falloff_input.value() * 100)
+                light_node["cone_falloff"].setValue(self.cone_falloff_input.value())
+
+            # **Synchronize Fallof Type**
+            if sender == self.falloff_type_input:
+                light_node["falloff_type"].setValue(self.falloff_type_input.currentText())
+
+            # **Synchronize Translate**
+            if sender in [self.x_translate_input, self.y_translate_input, self.z_translate_input]:
+                new_translate = [
+                    self.x_translate_input.value(),
+                    self.y_translate_input.value(),
+                    self.z_translate_input.value()
+                    ]
+                light_node["translate"].setValue(new_translate)
+            
+            # **Synchronize Rotation**
+            if sender in [self.x_rotate_input, self.y_rotate_input, self.z_rotate_input]:
+                new_rotation = [
+                    self.x_rotate_input.value(),
+                    self.y_rotate_input.value(),
+                    self.z_rotate_input.value()
+                    ]                
+                light_node["rotate"].setValue(new_rotation)
+
+            # **Synchronize Scale**
+            if sender in [self.x_scale_input, self.y_scale_input, self.z_scale_input]:
+                new_scale = [
+                    self.x_scale_input.value(),
+                    self.y_scale_input.value(),
+                    self.z_scale_input.value()
+                    ]                
+                light_node["scaling"].setValue(new_scale)
+
+            # **Synchronize Uniform Scale**
+            if sender == self.uniform_scale_slider_input:
+                self.uniform_scale_input.setValue(self.uniform_scale_slider_input.value() / 100)
+            elif sender == self.uniform_scale_input:
+                self.uniform_scale_slider_input.setValue(self.uniform_scale_input.value() * 100)
+                light_node["uniform_scale"].setValue(self.uniform_scale_input.value())
+    
+        self.populate_table()
 
 def light_editor():
     """
@@ -744,5 +790,8 @@ def light_editor():
     """
     global window
     window = MainWindow()
+    window.setWindowTitle("Light Editor")
     window.setMinimumSize(900, 450)
     window.show()
+
+light_editor()
