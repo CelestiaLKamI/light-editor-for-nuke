@@ -35,12 +35,15 @@ class MainWindow(QWidget):
         self.lights_list_table.selectionModel().selectionChanged.connect(self.update_selection)
 
         # Create light control buttons
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.clicked.connect(self.refresh_lights)
         self.enable_light_button = QPushButton("Disable")
         self.enable_light_button.clicked.connect(self.enable_disable)
         self.reset_button = QPushButton("Reset")
         self.reset_button.clicked.connect(self.reset_to_default)
 
         gbox0.setColumnStretch(0, 2)
+        gbox0.addWidget(self.refresh_button, 0, 3)
         gbox0.addWidget(self.enable_light_button, 0, 4)
         gbox0.addWidget(self.reset_button, 0, 5)
 
@@ -295,8 +298,10 @@ class MainWindow(QWidget):
 
             self.update_enable_button()
             self.update_values()
-            self.populate_table()
             self.enable_inputs()
+
+    def refresh_lights(self):
+        self.populate_table()
 
     def update_enable_button(self):
         """
